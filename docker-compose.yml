@@ -1,0 +1,96 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-juflow}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-juflow_dev}
+      POSTGRES_DB: ${POSTGRES_DB:-juflow}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-juflow}"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  rsshub:
+    image: diygod/rsshub:2025-04-13
+    environment:
+      NODE_ENV: production
+      CACHE_TYPE: redis
+      REDIS_URL: redis://redis:6379/1
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  backend:
+    build: ./backend
+    image: juflow-backend
+    ports:
+      - "8000:8000"
+    env_file: .env
+    logging: &default-logging
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rsshub:
+        condition: service_started
+    volumes:
+      - plugins:/app/plugins
+    restart: unless-stopped
+
+  celery-worker:
+    image: juflow-backend
+    entrypoint: []
+    command: ["celery", "-A", "app.tasks.celery_app", "worker", "--loglevel=info"]
+    env_file: .env
+    logging: *default-logging
+    depends_on:
+      backend:
+        condition: service_healthy
+    volumes:
+      - plugins:/app/plugins
+    restart: unless-stopped
+
+  celery-beat:
+    image: juflow-backend
+    entrypoint: []
+    command: ["celery", "-A", "app.tasks.celery_app", "beat", "--loglevel=info"]
+    env_file: .env
+    logging: *default-logging
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "80:80"
+    logging: *default-logging
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  plugins:

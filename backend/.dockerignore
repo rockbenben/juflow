@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+*.pyo
+.env
+.env.*
+!.env.example
+*.egg-info/
+.mypy_cache/
+.pytest_cache/
+.git/
+.gitignore
+tests/
+docs/
+*.md

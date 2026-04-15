@@ -1,0 +1,63 @@
+{
+  "sidebar": {
+    "unread": "All Unread",
+    "favorites": "Favorites",
+    "readLater": "Read Later",
+    "groups": "Groups",
+    "tags": "Tags",
+    "addSubscription": "Add Subscription",
+    "settings": "Settings",
+    "logout": "Logout",
+    "sources": "Sources"
+  },
+  "articles": {
+    "search": "🔍 Search articles...",
+    "noArticles": "No articles",
+    "selectToRead": "Select an article to start reading",
+    "original": "Original",
+    "favorite": "Favorite",
+    "readLater": "Read Later",
+    "loading": "Loading...",
+    "allUnread": "All Unread"
+  },
+  "settings": {
+    "title": "Settings",
+    "back": "Back",
+    "notifications": "Notifications",
+    "cookies": "Cookies",
+    "importExport": "Import/Export",
+    "plugins": "Plugins",
+    "api": "API",
+    "monitor": "Monitor",
+    "theme": "Theme",
+    "language": "Language"
+  },
+  "auth": {
+    "login": "Login",
+    "register": "Register",
+    "email": "Email",
+    "username": "Username",
+    "password": "Password",
+    "noAccount": "No account? ",
+    "hasAccount": "Already have an account? "
+  },
+  "subscription": {
+    "add": "Add Subscription",
+    "pasteUrl": "Paste the blogger's homepage URL, the system will auto-detect the platform",
+    "interval": "Fetch Interval",
+    "adding": "Detecting..."
+  },
+  "keyboard": {
+    "title": "Keyboard Shortcuts",
+    "next": "Next article",
+    "prev": "Previous article",
+    "open": "Open article",
+    "fav": "Toggle favorite",
+    "later": "Toggle read later",
+    "read": "Toggle read/unread",
+    "original": "Open original in new tab",
+    "search": "Focus search",
+    "close": "Close / Blur",
+    "help": "Toggle shortcut help"
+  }
+}

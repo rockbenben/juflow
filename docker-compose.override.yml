@@ -1,0 +1,15 @@
+# Development overrides (auto-merged by docker compose)
+# Exposes database and cache ports for local development tools.
+# In production, remove this file or use: docker compose -f docker-compose.yml up -d
+services:
+  postgres:
+    ports:
+      - "5432:5432"
+
+  redis:
+    ports:
+      - "6379:6379"
+
+  rsshub:
+    ports:
+      - "1200:1200"

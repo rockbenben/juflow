@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+.env
+*.egg-info/
+dist/
+node_modules/
+.vite/
+frontend/dist/
+.superpowers/
+*.db
+.mypy_cache/
+.pytest_cache/
+.claude/

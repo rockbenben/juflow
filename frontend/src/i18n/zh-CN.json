@@ -1,0 +1,63 @@
+{
+  "sidebar": {
+    "unread": "全部未读",
+    "favorites": "收藏",
+    "readLater": "稍后阅读",
+    "groups": "分组",
+    "tags": "标签",
+    "addSubscription": "添加订阅",
+    "settings": "设置",
+    "logout": "退出",
+    "sources": "订阅源"
+  },
+  "articles": {
+    "search": "🔍 搜索文章...",
+    "noArticles": "暂无文章",
+    "selectToRead": "选择一篇文章开始阅读",
+    "original": "原文",
+    "favorite": "收藏",
+    "readLater": "稍后读",
+    "loading": "加载中...",
+    "allUnread": "全部未读"
+  },
+  "settings": {
+    "title": "设置",
+    "back": "返回",
+    "notifications": "通知",
+    "cookies": "Cookie",
+    "importExport": "导入/导出",
+    "plugins": "插件",
+    "api": "API",
+    "monitor": "监控",
+    "theme": "主题",
+    "language": "语言"
+  },
+  "auth": {
+    "login": "登录",
+    "register": "注册",
+    "email": "邮箱",
+    "username": "用户名",
+    "password": "密码",
+    "noAccount": "还没有账号？",
+    "hasAccount": "已有账号？"
+  },
+  "subscription": {
+    "add": "添加订阅",
+    "pasteUrl": "粘贴博主主页 URL，系统自动识别平台",
+    "interval": "抓取间隔",
+    "adding": "识别中..."
+  },
+  "keyboard": {
+    "title": "键盘快捷键",
+    "next": "下一篇",
+    "prev": "上一篇",
+    "open": "打开文章",
+    "fav": "收藏",
+    "later": "稍后阅读",
+    "read": "已读/未读",
+    "original": "新标签打开原文",
+    "search": "搜索",
+    "close": "关闭",
+    "help": "快捷键帮助"
+  }
+}
