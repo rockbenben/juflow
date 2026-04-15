@@ -1,5 +1,7 @@
 # 聚流 JuFlow
 
+> 365 开源计划 #007 · 国内博主内容聚合阅读器
+
 国内博主内容聚合阅读器。关注的博主发的文章实时推送，覆盖雪球、集思录、淘股吧、微信公众号、知乎、微博、小红书等 14 个平台。
 
 ## 为什么做这个
@@ -305,6 +307,12 @@ juflow/
 - **插件隔离**：仅管理员可安装，插件名限制为字母数字，zip 防路径穿越
 - **API Key 安全**：仅通过 Header 传递，不支持 URL 参数
 - **Cookie 加密**：AES-256-GCM，按用户隔离
+
+## 关于 365 开源计划
+
+本项目是 [365 开源计划](https://github.com/rockbenben/365opensource) 的第 007 个项目。
+
+一个人 + AI，一年 300+ 个开源项目。[提交你的需求 →](https://my.feishu.cn/share/base/form/shrcnI6y7rrmlSjbzkYXh6sjmzb)
 
 ## 协议
 
