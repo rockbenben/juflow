@@ -5,6 +5,8 @@ from sqlalchemy import select
 import redis as redis_lib
 from app.config import settings
 from app.models.platform_cookie import PlatformCookie
+from app.models.source import Source
+from app.models.subscription import Subscription
 from app.services.crypto import decrypt
 from app.adapters import registry
 from app.adapters.base import SourceInfo
@@ -27,12 +29,33 @@ async def _validate_cookies():
             adapters = registry.get_adapters_by_platform(cookie.platform)
             if not adapters:
                 continue
+
+            # Validate against a real source this user subscribes to on this
+            # platform. Fetching a fake uid ("validate") just 404s and would
+            # wrongly mark valid cookies as expired. If the user has no such
+            # subscription, there's nothing meaningful to test — leave it as-is.
+            sub_source = (await db.execute(
+                select(Source)
+                .join(Subscription, Subscription.source_id == Source.id)
+                .where(Subscription.user_id == cookie.user_id, Source.platform == cookie.platform)
+                .limit(1)
+            )).scalar_one_or_none()
+            if sub_source is None:
+                continue
+
             was_valid = cookie.is_valid
             try:
                 decrypted = decrypt(cookie.cookie_encrypted)
                 adapter = adapters[-1]
-                dummy = SourceInfo(platform=cookie.platform, platform_uid="validate", display_name="", home_url="")
-                await adapter.fetch(dummy, cookies=decrypted)
+                source_info = SourceInfo(
+                    platform=sub_source.platform,
+                    platform_uid=sub_source.platform_uid,
+                    display_name=sub_source.display_name,
+                    home_url=sub_source.home_url,
+                    adapter_type=sub_source.adapter_type,
+                    adapter_config=sub_source.adapter_config or {},
+                )
+                await adapter.fetch(source_info, cookies=decrypted)
                 cookie.is_valid = True
             except Exception:
                 cookie.is_valid = False

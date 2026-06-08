@@ -9,12 +9,15 @@ interface CookieEntry {
   status: 'valid' | 'invalid' | 'unknown'
 }
 
+// Only scraper-based platforms actually use the user's cookie (scraper_base sets
+// the Cookie header). RSSHub-based platforms (雪球/微博/小红书) ignore it, so
+// listing them here would just be dead config.
 const PLATFORMS = [
   { key: 'jisilu', label: '集思录' },
   { key: 'taoguba', label: '淘股吧' },
-  { key: 'xueqiu', label: '雪球' },
-  { key: 'weibo', label: '微博' },
-  { key: 'xiaohongshu', label: '小红书' },
+  { key: 'tonghuashun', label: '同花顺' },
+  { key: 'jiuquaner', label: '韭圈儿' },
+  { key: 'youzhiyouxing', label: '有知有行' },
 ]
 
 const cookies = ref<Record<string, CookieEntry>>({})
