@@ -11,6 +11,8 @@ from app.models.source import Source
 from app.tasks.celery_app import celery_app
 from app.tasks.db import session_factory as _session_factory
 
+_MAX_DIGEST_ITEMS = 50
+
 async def _send_digest(mode: str):
     r = redis_lib.Redis.from_url(settings.redis_url)
     async with _session_factory() as db:
@@ -25,7 +27,9 @@ async def _send_digest(mode: str):
 
             key = f"juflow:email_digest:{user.id}"
             items = []
-            while r.llen(key) > 0:
+            # Only drain up to the render cap; leave the remainder queued for the
+            # next digest cycle instead of lpop-ing and discarding it.
+            while len(items) < _MAX_DIGEST_ITEMS and r.llen(key) > 0:
                 raw = r.lpop(key)
                 if raw:
                     items.append(json.loads(raw))
@@ -33,7 +37,7 @@ async def _send_digest(mode: str):
                 continue
 
             rows = ""
-            for item in items[:50]:
+            for item in items:
                 article = (await db.execute(select(Article).where(Article.id == uuid.UUID(item["article_id"])))).scalar_one_or_none()
                 source = (await db.execute(select(Source).where(Source.id == uuid.UUID(item["source_id"])))).scalar_one_or_none()
                 if article and source:

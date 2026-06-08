@@ -45,6 +45,13 @@ async def _fetch_source(source_id: str):
             adapter_config=source.adapter_config,
         )
 
+        # Capture scalar values now: store_articles may hit a concurrent-insert
+        # IntegrityError and rollback, which expires the ORM `source` instance.
+        # Reading expired attributes in plain async code afterwards raises
+        # MissingGreenlet, so snapshot what we need before that can happen.
+        source_pk = source.id
+        source_display = source.display_name
+
         items = None
         used_adapter_type = None
         error_msg = None
@@ -69,7 +76,7 @@ async def _fetch_source(source_id: str):
 
         # Write health log
         log = AdapterHealthLog(
-            source_id=source.id,
+            source_id=source_pk,
             adapter_type=used_adapter_type or "unknown",
             success=items is not None,
             error_message=error_msg if items is None else None,
@@ -80,10 +87,10 @@ async def _fetch_source(source_id: str):
         await db.commit()
 
         if new_articles:
-            print(f"[fetch] {source.display_name}: {len(new_articles)} new articles")
+            print(f"[fetch] {source_display}: {len(new_articles)} new articles")
             for article in new_articles:
                 from app.tasks.notify_task import notify_new_article
-                notify_new_article.delay(str(article.id), str(source.id))
+                notify_new_article.delay(str(article.id), str(source_pk))
 
 
 @celery_app.task(name="app.tasks.fetch_task.fetch_source")

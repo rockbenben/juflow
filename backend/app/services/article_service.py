@@ -28,11 +28,13 @@ async def store_articles(db: AsyncSession, source_id: uuid.UUID, items: list[Art
             continue
         article = Article(
             source_id=source_id,
-            title=item.title,
+            # Truncate to the column limits (title=1000, url/cover_image=2000) so a
+            # single oversized feed entry can't raise DataError and abort the batch.
+            title=item.title[:1000],
             summary=item.summary,
             content=item.content,
-            url=item.url,
-            cover_image=item.cover_image,
+            url=item.url[:2000],
+            cover_image=item.cover_image[:2000] if item.cover_image else item.cover_image,
             published_at=item.published_at or datetime.now(timezone.utc),
             fingerprint=fp,
         )

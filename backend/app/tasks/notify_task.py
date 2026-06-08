@@ -1,5 +1,5 @@
 import asyncio, uuid, json
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from sqlalchemy import select
 from app.config import settings
 from app.models.article import Article
@@ -12,10 +12,17 @@ from app.tasks.celery_app import celery_app
 from app.tasks.db import session_factory as _session_factory
 import redis as redis_lib
 
+# dnd_start/dnd_end come from the UI <input type="time"> as the user's local
+# wall clock. The app operates on China time (celery timezone="Asia/Shanghai",
+# daily digest at 08:00 Shanghai), which has no DST, so compare against a fixed
+# UTC+8 — not UTC, which would shift the quiet window by 8 hours.
+_APP_TZ = timezone(timedelta(hours=8))
+
+
 def _in_dnd(user_settings):
     if not user_settings.get("dnd_enabled"):
         return False
-    now = datetime.now(timezone.utc).strftime("%H:%M")
+    now = datetime.now(_APP_TZ).strftime("%H:%M")
     start = user_settings.get("dnd_start", "22:00")
     end = user_settings.get("dnd_end", "08:00")
     if start <= end:
