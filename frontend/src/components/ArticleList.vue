@@ -46,7 +46,13 @@ function onSearch() {
       />
     </div>
     <div v-if="articles.loading" class="loading">{{ t('articles.loading') }}</div>
-    <div v-else-if="articles.articles.length === 0" class="empty">{{ t('articles.noArticles') }}</div>
+    <div v-else-if="articles.articles.length === 0" class="empty">
+      <template v-if="searchQuery.trim()">{{ t('articles.noMatch') }}</template>
+      <template v-else>
+        <p class="empty-title">{{ t('articles.noArticles') }}</p>
+        <p class="empty-hint">{{ t('articles.emptyHint') }}</p>
+      </template>
+    </div>
     <div
       v-for="article in articles.articles" :key="article.id"
       class="article-item"
@@ -80,6 +86,8 @@ function onSearch() {
 .search-input:focus { border-color: var(--accent); }
 .search-input::placeholder { color: var(--text-secondary); }
 .loading, .empty { padding: 20px; color: var(--text-secondary); text-align: center; }
+.empty-title { margin: 0; }
+.empty-hint { margin: 8px 0 0; font-size: 12px; color: var(--text-muted); line-height: 1.6; text-align: left; }
 .article-item { padding: 12px 16px; border-bottom: 1px solid var(--border); cursor: pointer; flex-shrink: 0; }
 .article-item:hover { background: var(--bg-tertiary); }
 .article-item.selected { background: var(--bg-tertiary); }

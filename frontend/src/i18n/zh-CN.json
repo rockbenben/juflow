@@ -13,10 +13,12 @@
   "articles": {
     "search": "🔍 搜索文章...",
     "noArticles": "暂无文章",
+    "noMatch": "没有匹配的文章",
+    "emptyHint": "新订阅的文章将在几分钟内抓取完成。若持续为空，部分平台需在「设置 → Cookie」配置登录凭证，或在「设置 → 监控」查看各源抓取状态。",
     "selectToRead": "选择一篇文章开始阅读",
     "original": "原文",
     "favorite": "收藏",
-    "readLater": "稍后读",
+    "readLater": "稍后阅读",
     "loading": "加载中...",
     "allUnread": "全部未读"
   },

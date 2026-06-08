@@ -12,7 +12,9 @@
   },
   "articles": {
     "search": "🔍 Search articles...",
-    "noArticles": "No articles",
+    "noArticles": "No articles yet",
+    "noMatch": "No matching articles",
+    "emptyHint": "Articles from new subscriptions arrive within a few minutes. If it stays empty, some platforms need a login cookie (Settings → Cookies), or check fetch status under Settings → Monitor.",
     "selectToRead": "Select an article to start reading",
     "original": "Original",
     "favorite": "Favorite",

@@ -46,7 +46,13 @@ export function useWebSocket() {
 
   onMounted(connect)
   onUnmounted(() => {
-    ws?.close()
+    if (ws) {
+      // Detach onclose first: close() dispatches its event asynchronously,
+      // so leaving the handler attached would schedule a reconnect that
+      // outlives the component (a zombie, self-reconnecting socket).
+      ws.onclose = null
+      ws.close()
+    }
     if (reconnectTimer) clearTimeout(reconnectTimer)
   })
 }
