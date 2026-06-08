@@ -62,7 +62,7 @@ def run_migrations_online() -> None:
     url = settings.database_url.replace("+asyncpg", "+psycopg2")
     connectable = engine_from_config(
         {"sqlalchemy.url": url},
-        prefix="",
+        prefix="sqlalchemy.",
         poolclass=pool.NullPool,
     )
 
