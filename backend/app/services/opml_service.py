@@ -1,3 +1,5 @@
+import xml.etree.ElementTree as XmlET
+
 import defusedxml.ElementTree as ET
 from io import BytesIO
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -6,7 +8,10 @@ from app.services.subscription_service import add_subscription
 
 
 async def import_opml(db: AsyncSession, user_id, file_content: bytes) -> dict:
-    tree = ET.parse(BytesIO(file_content))
+    try:
+        tree = ET.parse(BytesIO(file_content))
+    except ET.ParseError:
+        raise ValueError("无法解析 OPML 文件，请检查文件格式")
     root = tree.getroot()
     body = root.find("body")
     if body is None:
@@ -22,13 +27,13 @@ async def import_opml(db: AsyncSession, user_id, file_content: bytes) -> dict:
             continue
         adapter = registry.detect(url)
         if not adapter:
-            skipped.append({"url": url, "title": title, "reason": "unsupported platform"})
+            skipped.append({"url": url, "title": title, "reason": "不支持的平台"})
             continue
         try:
             await add_subscription(db, user_id, url)
             imported += 1
         except ValueError:
-            skipped.append({"url": url, "title": title, "reason": "already subscribed or error"})
+            skipped.append({"url": url, "title": title, "reason": "已订阅或解析失败"})
 
     return {"imported": imported, "skipped": skipped}
 
@@ -58,10 +63,10 @@ def _make_outline_attrs(sub) -> dict:
 
 
 def export_opml(subscriptions) -> str:
-    root = ET.Element("opml", version="2.0")
-    head = ET.SubElement(root, "head")
-    ET.SubElement(head, "title").text = "JuFlow Subscriptions"
-    body = ET.SubElement(root, "body")
+    root = XmlET.Element("opml", version="2.0")
+    head = XmlET.SubElement(root, "head")
+    XmlET.SubElement(head, "title").text = "JuFlow Subscriptions"
+    body = XmlET.SubElement(root, "body")
 
     grouped = {}
     ungrouped = []
@@ -73,11 +78,11 @@ def export_opml(subscriptions) -> str:
             ungrouped.append(sub)
 
     for group_name, subs in grouped.items():
-        folder = ET.SubElement(body, "outline", text=group_name, title=group_name)
+        folder = XmlET.SubElement(body, "outline", text=group_name, title=group_name)
         for sub in subs:
-            ET.SubElement(folder, "outline", **_make_outline_attrs(sub))
+            XmlET.SubElement(folder, "outline", **_make_outline_attrs(sub))
 
     for sub in ungrouped:
-        ET.SubElement(body, "outline", **_make_outline_attrs(sub))
+        XmlET.SubElement(body, "outline", **_make_outline_attrs(sub))
 
-    return ET.tostring(root, encoding="unicode", xml_declaration=True)
+    return XmlET.tostring(root, encoding="unicode", xml_declaration=True)

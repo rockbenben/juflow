@@ -17,7 +17,10 @@ async def import_opml_endpoint(file: UploadFile = File(...), user: User = Depend
     content = await file.read(_MAX_UPLOAD_SIZE + 1)
     if len(content) > _MAX_UPLOAD_SIZE:
         raise HTTPException(status_code=413, detail="File too large (max 2 MB)")
-    result = await import_opml(db, user.id, content)
+    try:
+        result = await import_opml(db, user.id, content)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     return result
 
 

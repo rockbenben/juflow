@@ -4,7 +4,8 @@ import api from '../../api/client'
 
 const fileInput = ref<HTMLInputElement | null>(null)
 const uploading = ref(false)
-const importResult = ref<{ imported: number; skipped: string[] } | null>(null)
+interface SkippedItem { url: string; title: string; reason: string }
+const importResult = ref<{ imported: number; skipped: SkippedItem[] } | null>(null)
 const importError = ref('')
 
 async function handleImport() {
@@ -32,8 +33,18 @@ async function handleImport() {
   }
 }
 
-function getExportUrl() {
-  return '/api/v1/opml/export'
+async function exportOpml() {
+  // The export endpoint requires auth (Bearer/X-API-Key header). A plain <a href>
+  // navigation can't send those, so fetch via the API client and download the blob.
+  const { data } = await api.get('/opml/export', { responseType: 'blob' })
+  const url = URL.createObjectURL(data)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = 'juflow-subscriptions.opml'
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  URL.revokeObjectURL(url)
 }
 </script>
 
@@ -63,7 +74,7 @@ function getExportUrl() {
         <div v-if="importResult.skipped.length > 0" class="skipped-list">
           <p class="skipped-title">跳过 {{ importResult.skipped.length }} 个（已存在或格式错误）：</p>
           <ul>
-            <li v-for="(item, i) in importResult.skipped" :key="i">{{ item }}</li>
+            <li v-for="(item, i) in importResult.skipped" :key="i">{{ item.title || item.url }} — {{ item.reason }}</li>
           </ul>
         </div>
       </div>
@@ -73,9 +84,9 @@ function getExportUrl() {
     <div class="card">
       <h3>导出 OPML</h3>
       <p class="description">将当前所有订阅源导出为 OPML 文件，可用于备份或导入其他阅读器。</p>
-      <a :href="getExportUrl()" class="export-btn" download="juflow-subscriptions.opml">
+      <button type="button" class="export-btn" @click="exportOpml">
         下载 OPML 文件
-      </a>
+      </button>
     </div>
   </div>
 </template>
@@ -106,6 +117,7 @@ h3 { color: var(--text-primary); font-size: 14px; margin: 0 0 8px; }
 .export-btn {
   display: inline-block; padding: 8px 20px; background: var(--bg-tertiary); border: 1px solid var(--accent);
   border-radius: 6px; color: var(--accent); font-size: 13px; text-decoration: none; transition: background 0.2s;
+  cursor: pointer; font-family: inherit;
 }
 .export-btn:hover { background: var(--accent); color: #fff; }
 </style>
