@@ -1,5 +1,6 @@
 from app.adapters.base import SourceInfo
 from app.adapters.rss_base import DirectRssBaseAdapter
+from app.adapters.rsshub_base import RsshubBaseAdapter
 
 
 class CsdnRssAdapter(DirectRssBaseAdapter):
@@ -10,11 +11,15 @@ class CsdnRssAdapter(DirectRssBaseAdapter):
     home_url_template = "https://blog.csdn.net/{uid}"
 
 
-class ZhihuRssAdapter(DirectRssBaseAdapter):
+# Zhihu has no public RSS — the old /people/{uid}/posts URL is an HTML/API page,
+# not a feed, so the previous "direct RSS" adapter always parsed to 0 articles.
+# Route through RSSHub instead, like the other RSSHub-backed platforms.
+class ZhihuRssAdapter(RsshubBaseAdapter):
     platform = "zhihu"
-    name = "知乎专栏"
+    name = "知乎"
     url_pattern = r"https?://(?:www\.)?zhihu\.com/(?:people|column)/([^/]+)"
-    rss_url_template = "https://www.zhihu.com/people/{uid}/posts"
+    rsshub_route_template = "/zhihu/posts/{uid}"
+    display_name_template = "{uid}"
     home_url_template = "https://www.zhihu.com/people/{uid}"
 
     async def resolve(self, url: str) -> SourceInfo:
@@ -23,15 +28,12 @@ class ZhihuRssAdapter(DirectRssBaseAdapter):
             raise ValueError(f"Cannot parse Zhihu URL: {url}")
         uid = match.group(1)
         is_column = "/column/" in url
+        route = f"/zhihu/zhuanlan/{uid}" if is_column else f"/zhihu/posts/{uid}"
         return SourceInfo(
             platform=self.platform,
             platform_uid=uid,
             display_name=uid,
             home_url=f"https://www.zhihu.com/{'column' if is_column else 'people'}/{uid}",
             adapter_type=self.adapter_type,
-            adapter_config={
-                "rss_url": f"https://www.zhihu.com/column/{uid}/rss" if is_column
-                else f"https://www.zhihu.com/people/{uid}/posts",
-                "is_column": is_column,
-            },
+            adapter_config={"rsshub_route": route, "is_column": is_column},
         )

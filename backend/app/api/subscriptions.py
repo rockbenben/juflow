@@ -6,7 +6,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_db, get_current_user
 from app.models.user import User
 from app.schemas.subscription import SubscriptionCreate, SubscriptionResponse, SubscriptionUpdate
-from app.services.subscription_service import add_subscription, list_subscriptions, delete_subscription, update_subscription
+from app.services.subscription_service import (
+    add_subscription,
+    list_subscriptions,
+    get_subscription_detail,
+    delete_subscription,
+    update_subscription,
+)
 
 router = APIRouter(prefix="/subscriptions", tags=["subscriptions"])
 
@@ -30,6 +36,18 @@ async def get_subscriptions(
     db: AsyncSession = Depends(get_db),
 ):
     return await list_subscriptions(db, user.id)
+
+
+@router.get("/{subscription_id}")
+async def get_subscription(
+    subscription_id: uuid.UUID,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    detail = await get_subscription_detail(db, user.id, subscription_id)
+    if detail is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Subscription not found")
+    return detail
 
 
 @router.put("/{subscription_id}", response_model=SubscriptionResponse)

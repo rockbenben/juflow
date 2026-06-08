@@ -1,4 +1,5 @@
 import ipaddress
+import socket
 import uuid
 from urllib.parse import urlparse
 
@@ -13,24 +14,42 @@ from app.models.subscription import Subscription
 from app.models.tag import Tag
 
 
+def _is_blocked_ip(ip: ipaddress._BaseAddress) -> bool:
+    return (
+        ip.is_private or ip.is_loopback or ip.is_link_local
+        or ip.is_reserved or ip.is_multicast or ip.is_unspecified
+    )
+
+
 def _validate_subscription_url(url: str) -> None:
-    """Block SSRF attempts via internal/metadata URLs."""
+    """Block SSRF attempts via internal/metadata URLs.
+
+    Resolves the hostname and rejects it if *any* resolved address is internal,
+    so hostnames pointing at private/metadata IPs are caught — not just literal
+    IPs. (DNS rebinding between this check and the later fetch remains out of
+    scope; pinning the resolved IP through to the HTTP client would be needed.)
+    """
     parsed = urlparse(url)
     hostname = parsed.hostname or ""
     if not parsed.scheme or parsed.scheme not in ("http", "https"):
-        raise ValueError(f"URL must use http or https: {url}")
-    # Block private/internal IPs
+        raise ValueError("链接必须以 http 或 https 开头")
+    if not hostname:
+        raise ValueError("链接缺少有效域名")
+
+    # Resolve to every address the host maps to and reject any internal one.
     try:
-        ip = ipaddress.ip_address(hostname)
-        if ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_reserved:
-            raise ValueError(f"Internal IP addresses are not allowed: {hostname}")
-    except ValueError as e:
-        if "Internal IP" in str(e):
-            raise
-    # Block cloud metadata endpoints
-    blocked_hosts = {"metadata.google.internal", "169.254.169.254"}
-    if hostname in blocked_hosts:
-        raise ValueError(f"Blocked host: {hostname}")
+        addrinfos = socket.getaddrinfo(hostname, None)
+    except socket.gaierror:
+        # Unresolvable host can't reach an internal IP; the later fetch will fail.
+        return
+    for info in addrinfos:
+        ip_str = info[4][0].split("%")[0]  # strip IPv6 scope id, e.g. fe80::1%eth0
+        try:
+            ip = ipaddress.ip_address(ip_str)
+        except ValueError:
+            continue
+        if _is_blocked_ip(ip):
+            raise ValueError("该链接指向内网地址，已拒绝")
 
 
 async def add_subscription(
@@ -65,7 +84,7 @@ async def add_subscription(
                 select(Subscription).where(Subscription.user_id == user_id, Subscription.source_id == source.id)
             )
             if existing.scalar_one_or_none():
-                raise ValueError("Already subscribed to this source")
+                raise ValueError("已经订阅过该来源")
 
             sub = Subscription(
                 user_id=user_id,
@@ -82,7 +101,7 @@ async def add_subscription(
             return result.scalar_one()
 
     if not adapter:
-        raise ValueError(f"Unsupported URL: {url}. Supported platforms: {', '.join(registry.platforms)}")
+        raise ValueError("暂不支持该链接，请粘贴受支持平台的博主主页地址")
 
     source_info = await adapter.resolve(url)
 
@@ -124,11 +143,40 @@ async def add_subscription(
     return result.scalar_one()
 
 
+async def get_subscription_detail(
+    db: AsyncSession, user_id: uuid.UUID, subscription_id: uuid.UUID
+) -> dict | None:
+    result = await db.execute(
+        select(Subscription)
+        .where(Subscription.id == subscription_id, Subscription.user_id == user_id)
+        .options(
+            selectinload(Subscription.source),
+            selectinload(Subscription.groups),
+            selectinload(Subscription.tags),
+        )
+    )
+    sub = result.scalar_one_or_none()
+    if not sub:
+        return None
+    return {
+        "id": str(sub.id),
+        "custom_name": sub.custom_name,
+        "fetch_interval": sub.fetch_interval,
+        "notify_enabled": sub.notify_enabled,
+        "notify_channels": sub.notify_channels,
+        "dnd_exempt": sub.dnd_exempt,
+        "group_ids": [str(g.id) for g in sub.groups],
+        "tag_ids": [str(t.id) for t in sub.tags],
+    }
+
+
 async def list_subscriptions(db: AsyncSession, user_id: uuid.UUID) -> list[Subscription]:
     result = await db.execute(
         select(Subscription)
         .where(Subscription.user_id == user_id)
-        .options(selectinload(Subscription.source))
+        # groups is eager-loaded because export_opml() reads sub.groups; a lazy
+        # load there would raise MissingGreenlet in the async request context.
+        .options(selectinload(Subscription.source), selectinload(Subscription.groups))
         .order_by(Subscription.created_at.desc())
     )
     return list(result.scalars().all())

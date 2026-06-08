@@ -46,18 +46,18 @@ async function handleAdd() {
         <div class="interval-row">
           <label>{{ t('subscription.interval') }}</label>
           <select v-model="fetchInterval">
-            <option :value="60">1 分钟</option>
-            <option :value="120">2 分钟</option>
-            <option :value="300">5 分钟</option>
-            <option :value="600">10 分钟</option>
-            <option :value="1800">30 分钟</option>
+            <option :value="60">每分钟</option>
+            <option :value="120">每 2 分钟</option>
+            <option :value="300">每 5 分钟</option>
+            <option :value="600">每 10 分钟</option>
+            <option :value="1800">每 30 分钟</option>
           </select>
         </div>
         <p v-if="error" class="error">{{ error }}</p>
         <p v-if="success" class="success">{{ success }}</p>
         <button type="submit" :disabled="loading">{{ loading ? t('subscription.adding') : t('subscription.add') }}</button>
       </form>
-      <div class="supported"><span class="label">支持平台：</span>CSDN · 知乎 · 雪球</div>
+      <div class="supported"><span class="label">支持平台：</span>雪球 · 集思录 · 淘股吧 · 东方财富 · 同花顺 · 韭圈儿 · 有知有行 · 公众号 · 知乎 · 微博 · 小红书 · 掘金 · CSDN · V2EX</div>
     </div>
   </div>
 </template>

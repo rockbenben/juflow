@@ -45,4 +45,4 @@ async def test_resolve_zhihu_column(zhihu):
     source = await zhihu.resolve("https://zhihu.com/column/my-column")
     assert source.platform_uid == "my-column"
     assert source.adapter_config["is_column"] is True
-    assert "column/my-column/rss" in source.adapter_config["rss_url"]
+    assert "zhuanlan/my-column" in source.adapter_config["rsshub_route"]
