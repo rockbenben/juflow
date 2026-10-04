@@ -1,8 +1,6 @@
-import asyncio
 import uuid
 from collections.abc import AsyncGenerator
 
-import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
@@ -17,12 +15,10 @@ TEST_DB_URL = "postgresql+asyncpg://juflow:juflow_dev@localhost:5432/juflow_test
 engine = create_async_engine(TEST_DB_URL)
 TestSession = async_sessionmaker(engine, expire_on_commit=False)
 
-
-@pytest.fixture(scope="session")
-def event_loop():
-    loop = asyncio.new_event_loop()
-    yield loop
-    loop.close()
+# pytest-asyncio runs every test and fixture on one session-scoped loop
+# (see pytest.ini): the module-level engine pools asyncpg connections that
+# belong to the loop they were first opened on, and a per-test loop would
+# strand them ("Future attached to a different loop").
 
 
 @pytest_asyncio.fixture(autouse=True)
