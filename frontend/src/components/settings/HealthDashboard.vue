@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import api from '../../api/client'
+import { useI18n } from 'vue-i18n'
 
 interface PlatformHealth {
   platform: string
@@ -11,6 +12,7 @@ interface PlatformHealth {
   last_error: string | null
 }
 
+const { t } = useI18n()
 const health = ref<PlatformHealth[]>([])
 const loading = ref(false)
 const error = ref('')
@@ -21,7 +23,7 @@ onMounted(async () => {
     const { data } = await api.get('/admin/health')
     health.value = Array.isArray(data) ? data : (data.platforms || [])
   } catch (e: any) {
-    error.value = e.response?.data?.detail || '加载失败'
+    error.value = e.response?.data?.detail || t('health.loadFailed')
   } finally {
     loading.value = false
   }
@@ -40,36 +42,36 @@ function rateBadgeClass(rate: number): string {
 
 <template>
   <div class="health-dashboard">
-    <div v-if="loading" class="loading">加载中...</div>
-    <div v-else-if="error" class="error">{{ error }}</div>
-    <div v-else-if="health.length === 0" class="empty">暂无监控数据</div>
+    <div v-if="loading" class="loading" role="status">{{ t('health.loading') }}</div>
+    <div v-else-if="error" class="error" role="alert">{{ error }}</div>
+    <div v-else-if="health.length === 0" class="empty">{{ t('health.empty') }}</div>
     <div v-for="p in health" :key="p.platform" class="platform-card">
       <div class="card-top">
         <div class="platform-name">{{ p.platform }}</div>
         <span class="rate-badge" :class="rateBadgeClass(successRate(p))">
-          {{ successRate(p) }}% 成功
+          {{ t('health.successRate', { n: successRate(p) }) }}
         </span>
       </div>
       <div class="stats-row">
         <div class="stat">
-          <span class="stat-label">总计</span>
+          <span class="stat-label">{{ t('health.total') }}</span>
           <span class="stat-value">{{ p.total }}</span>
         </div>
         <div class="stat">
-          <span class="stat-label">成功</span>
+          <span class="stat-label">{{ t('health.success') }}</span>
           <span class="stat-value success-val">{{ p.success_count }}</span>
         </div>
         <div class="stat">
-          <span class="stat-label">失败</span>
+          <span class="stat-label">{{ t('health.failed') }}</span>
           <span class="stat-value error-val">{{ p.total - p.success_count }}</span>
         </div>
         <div class="stat">
-          <span class="stat-label">平均耗时</span>
+          <span class="stat-label">{{ t('health.avgDuration') }}</span>
           <span class="stat-value">{{ p.avg_duration_ms }}ms</span>
         </div>
       </div>
       <div v-if="p.last_error" class="last-error">
-        <span class="error-label">最后错误：</span>{{ p.last_error }}
+        <span class="error-label">{{ t('health.lastError') }}</span>{{ p.last_error }}
       </div>
     </div>
   </div>
@@ -82,10 +84,10 @@ function rateBadgeClass(rate: number): string {
 .platform-card { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; padding: 16px; }
 .card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
 .platform-name { color: var(--text-primary); font-size: 14px; font-weight: 600; text-transform: capitalize; }
-.rate-badge { font-size: 12px; padding: 2px 10px; border-radius: 10px; font-weight: 600; }
-.badge-green { background: color-mix(in srgb, var(--success) 20%, transparent); color: var(--success); }
-.badge-yellow { background: color-mix(in srgb, #fdcb6e 20%, transparent); color: #fdcb6e; }
-.badge-red { background: color-mix(in srgb, var(--error) 20%, transparent); color: var(--error); }
+.rate-badge { font-size: 12px; font-weight: 600; }
+.badge-green { color: var(--success); }
+.badge-yellow { color: var(--warning); }
+.badge-red { color: var(--error); }
 .stats-row { display: flex; gap: 20px; margin-bottom: 10px; flex-wrap: wrap; }
 .stat { display: flex; flex-direction: column; gap: 2px; }
 .stat-label { color: var(--text-muted); font-size: 11px; }

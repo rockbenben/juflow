@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import api from '../../api/client'
+import { useI18n } from 'vue-i18n'
 
+const { t } = useI18n()
 const fileInput = ref<HTMLInputElement | null>(null)
 const uploading = ref(false)
 interface SkippedItem { url: string; title: string; reason: string }
@@ -26,7 +28,7 @@ async function handleImport() {
     importResult.value = { imported: data.imported ?? 0, skipped: data.skipped ?? [] }
   } catch (e: unknown) {
     const err = e as { response?: { data?: { detail?: string } } }
-    importError.value = err.response?.data?.detail || '导入失败，请检查文件格式'
+    importError.value = err.response?.data?.detail || t('opml.importFailed')
   } finally {
     uploading.value = false
     if (fileInput.value) fileInput.value.value = ''
@@ -51,8 +53,8 @@ async function exportOpml() {
 <template>
   <div class="opml-section">
     <div class="card">
-      <h3>导入 OPML</h3>
-      <p class="description">支持标准 OPML 格式的订阅列表文件（.opml 或 .xml）。</p>
+      <h3>{{ t('opml.importTitle') }}</h3>
+      <p class="description">{{ t('opml.importDesc') }}</p>
       <div class="import-row">
         <input
           ref="fileInput"
@@ -62,30 +64,30 @@ async function exportOpml() {
           id="opml-file"
         />
         <label for="opml-file" class="file-label">
-          选择文件
+          {{ t('opml.chooseFile') }}
         </label>
         <button class="import-btn" @click="handleImport" :disabled="uploading">
-          {{ uploading ? '导入中...' : '上传导入' }}
+          {{ uploading ? t('opml.importing') : t('opml.uploadImport') }}
         </button>
       </div>
 
-      <div v-if="importResult" class="result-box">
-        <p class="result-imported">成功导入 {{ importResult.imported }} 个订阅源</p>
+      <div v-if="importResult" class="result-box" role="status">
+        <p class="result-imported">{{ t('opml.imported', { n: importResult.imported }) }}</p>
         <div v-if="importResult.skipped.length > 0" class="skipped-list">
-          <p class="skipped-title">跳过 {{ importResult.skipped.length }} 个（已存在或格式错误）：</p>
+          <p class="skipped-title">{{ t('opml.skipped', { n: importResult.skipped.length }) }}</p>
           <ul>
             <li v-for="(item, i) in importResult.skipped" :key="i">{{ item.title || item.url }} — {{ item.reason }}</li>
           </ul>
         </div>
       </div>
-      <p v-if="importError" class="error-msg">{{ importError }}</p>
+      <p v-if="importError" class="error-msg" role="alert">{{ importError }}</p>
     </div>
 
     <div class="card">
-      <h3>导出 OPML</h3>
-      <p class="description">将当前所有订阅源导出为 OPML 文件，可用于备份或导入其他阅读器。</p>
+      <h3>{{ t('opml.exportTitle') }}</h3>
+      <p class="description">{{ t('opml.exportDesc') }}</p>
       <button type="button" class="export-btn" @click="exportOpml">
-        下载 OPML 文件
+        {{ t('opml.download') }}
       </button>
     </div>
   </div>
@@ -100,24 +102,25 @@ h3 { color: var(--text-primary); font-size: 14px; margin: 0 0 8px; }
 .file-input { display: none; }
 .file-label {
   padding: 8px 16px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 6px;
-  color: #aaa; font-size: 13px; cursor: pointer; transition: border-color 0.2s; white-space: nowrap;
+  color: var(--text-secondary); font-size: 13px; cursor: pointer; transition: border-color 0.2s; white-space: nowrap;
 }
 .file-label:hover { border-color: var(--accent); color: var(--text-primary); }
 .import-btn {
-  padding: 8px 20px; background: var(--accent); color: #fff; border: none;
-  border-radius: 6px; cursor: pointer; font-size: 13px; transition: opacity 0.2s; white-space: nowrap;
+  padding: 8px 20px; background: var(--accent-strong); color: #fff; border: none;
+  border-radius: 6px; cursor: pointer; font-size: 13px; font-family: inherit; transition: opacity 0.2s; white-space: nowrap;
 }
+.import-btn:hover:not(:disabled) { background: var(--accent-strong-hover); }
 .import-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 .result-box { margin-top: 16px; padding: 12px 16px; background: color-mix(in srgb, var(--success) 10%, var(--bg-secondary)); border: 1px solid color-mix(in srgb, var(--success) 30%, transparent); border-radius: 6px; }
 .result-imported { color: var(--success); font-size: 13px; margin: 0 0 8px; }
-.skipped-title { color: #fdcb6e; font-size: 12px; margin: 0 0 6px; }
+.skipped-title { color: var(--text-primary); font-weight: 600; font-size: 12px; margin: 0 0 6px; }
 .skipped-list ul { margin: 0; padding-left: 20px; }
 .skipped-list li { color: var(--text-secondary); font-size: 12px; margin-bottom: 3px; }
 .error-msg { color: var(--error); font-size: 13px; margin-top: 12px; }
 .export-btn {
   display: inline-block; padding: 8px 20px; background: var(--bg-tertiary); border: 1px solid var(--accent);
-  border-radius: 6px; color: var(--accent); font-size: 13px; text-decoration: none; transition: background 0.2s;
-  cursor: pointer; font-family: inherit;
+  border-radius: 6px; color: var(--accent-text); font-size: 13px; font-family: inherit; text-decoration: none; transition: background 0.2s;
+  cursor: pointer;
 }
-.export-btn:hover { background: var(--accent); color: #fff; }
+.export-btn:hover { background: var(--accent-strong); color: #fff; border-color: var(--accent-strong); }
 </style>

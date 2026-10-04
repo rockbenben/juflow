@@ -1,11 +1,13 @@
 import { onMounted, onUnmounted, ref } from 'vue'
 import { useArticlesStore } from '../stores/articles'
 
-export const toastMessage = ref<string | null>(null)
-let toastTimer: number | null = null
+export interface Toast { text: string; type: 'error' | 'warning' }
 
-function showToast(msg: string, duration = 6000) {
-  toastMessage.value = msg
+export const toastMessage = ref<Toast | null>(null)
+let toastTimer: ReturnType<typeof setTimeout> | null = null
+
+function showToast(msg: string, type: Toast['type'] = 'error', duration = 6000) {
+  toastMessage.value = { text: msg, type }
   if (toastTimer) clearTimeout(toastTimer)
   toastTimer = window.setTimeout(() => { toastMessage.value = null }, duration)
 }
@@ -13,7 +15,7 @@ function showToast(msg: string, duration = 6000) {
 export function useWebSocket() {
   const articles = useArticlesStore()
   let ws: WebSocket | null = null
-  let reconnectTimer: number | null = null
+  let reconnectTimer: ReturnType<typeof setTimeout> | null = null
 
   function connect() {
     const token = localStorage.getItem('token')
@@ -30,9 +32,9 @@ export function useWebSocket() {
       if (data.type === 'new_article') {
         articles.prependArticle(data.article)
       } else if (data.type === 'cookie_expired') {
-        showToast(data.message)
+        showToast(data.message, 'warning')
         if (Notification.permission === 'granted') {
-          new Notification('聚流', { body: data.message })
+          new Notification('JuFlow', { body: data.message })
         }
       }
     }

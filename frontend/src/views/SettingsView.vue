@@ -29,13 +29,13 @@ function setLocale(lang: string) {
         </select>
       </div>
     </div>
-    <div class="tabs">
-      <button :class="{ active: activeTab === 'notifications' }" @click="activeTab = 'notifications'">{{ t('settings.notifications') }}</button>
-      <button :class="{ active: activeTab === 'cookies' }" @click="activeTab = 'cookies'">{{ t('settings.cookies') }}</button>
-      <button :class="{ active: activeTab === 'opml' }" @click="activeTab = 'opml'">{{ t('settings.importExport') }}</button>
-      <button :class="{ active: activeTab === 'plugins' }" @click="activeTab = 'plugins'">{{ t('settings.plugins') }}</button>
-      <button :class="{ active: activeTab === 'api' }" @click="activeTab = 'api'">{{ t('settings.api') }}</button>
-      <button :class="{ active: activeTab === 'monitor' }" @click="activeTab = 'monitor'">{{ t('settings.monitor') }}</button>
+    <div class="tabs" role="tablist">
+      <button role="tab" :aria-selected="activeTab === 'notifications'" @click="activeTab = 'notifications'">{{ t('settings.notifications') }}</button>
+      <button role="tab" :aria-selected="activeTab === 'cookies'" @click="activeTab = 'cookies'">{{ t('settings.cookies') }}</button>
+      <button role="tab" :aria-selected="activeTab === 'opml'" @click="activeTab = 'opml'">{{ t('settings.importExport') }}</button>
+      <button role="tab" :aria-selected="activeTab === 'plugins'" @click="activeTab = 'plugins'">{{ t('settings.plugins') }}</button>
+      <button role="tab" :aria-selected="activeTab === 'api'" @click="activeTab = 'api'">{{ t('settings.api') }}</button>
+      <button role="tab" :aria-selected="activeTab === 'monitor'" @click="activeTab = 'monitor'">{{ t('settings.monitor') }}</button>
     </div>
     <NotificationSettings v-if="activeTab === 'notifications'" />
     <CookieManager v-if="activeTab === 'cookies'" />
@@ -49,14 +49,14 @@ function setLocale(lang: string) {
 <style scoped>
 .settings-page { max-width: 680px; margin: 0 auto; padding: 32px; min-height: 100vh; background: var(--bg-primary); }
 .settings-header { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
-.back { color: var(--accent); text-decoration: none; font-size: 14px; }
+.back { color: var(--accent-text); text-decoration: none; font-size: 14px; }
 h1 { color: var(--text-primary); font-size: 22px; margin: 0; flex: 1; }
 .lang-selector select {
   background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 6px;
   color: var(--text-primary); padding: 6px 10px; font-size: 13px; cursor: pointer; outline: none;
 }
 .tabs { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
-.tabs button { padding: 8px 16px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 6px; color: var(--text-secondary); cursor: pointer; font-size: 13px; transition: all 0.15s; }
-.tabs button.active { background: var(--accent); color: #fff; border-color: var(--accent); }
-.tabs button:hover:not(.active) { border-color: var(--accent); color: var(--text-primary); }
+.tabs button { padding: 8px 16px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 6px; color: var(--text-secondary); cursor: pointer; font-size: 13px; font-family: inherit; transition: all 0.15s; }
+.tabs button[aria-selected="true"] { background: var(--accent-strong); color: #fff; border-color: var(--accent-strong); }
+.tabs button:hover:not([aria-selected="true"]) { border-color: var(--accent); color: var(--text-primary); }
 </style>

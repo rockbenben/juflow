@@ -41,10 +41,13 @@ function closeOnboarding() {
 
 async function onMobileTab(tab: string) {
   mobileTab.value = tab
+  articles.clearSelection()
   if (tab === 'feed') {
     await articles.load()
   } else if (tab === 'favorites') {
     await articles.loadFavorites()
+  } else if (tab === 'read_later') {
+    await articles.loadReadLater()
   }
 }
 </script>

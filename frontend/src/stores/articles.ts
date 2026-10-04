@@ -26,9 +26,11 @@ export const useArticlesStore = defineStore('articles', () => {
   const total = ref(0)
   const selected = ref<Article | null>(null)
   const loading = ref(false)
+  const filter = ref<'all' | 'favorites' | 'read_later' | 'search'>('all')
 
   async function load(unreadOnly = false, limit = 50, offset = 0) {
     loading.value = true
+    filter.value = 'all'
     try {
       const { data } = await api.get('/articles/', { params: { unread_only: unreadOnly, limit, offset } })
       articles.value = data.articles
@@ -58,8 +60,13 @@ export const useArticlesStore = defineStore('articles', () => {
     }
   }
 
+  function clearSelection() {
+    selected.value = null
+  }
+
   async function search(q: string) {
     loading.value = true
+    filter.value = 'search'
     try {
       const { data } = await api.get('/articles/', { params: { q } })
       articles.value = data.articles
@@ -71,6 +78,7 @@ export const useArticlesStore = defineStore('articles', () => {
 
   async function loadFavorites() {
     loading.value = true
+    filter.value = 'favorites'
     try {
       const { data } = await api.get('/articles/', { params: { filter: 'favorited' } })
       articles.value = data.articles
@@ -82,6 +90,7 @@ export const useArticlesStore = defineStore('articles', () => {
 
   async function loadReadLater() {
     loading.value = true
+    filter.value = 'read_later'
     try {
       const { data } = await api.get('/articles/', { params: { filter: 'read_later' } })
       articles.value = data.articles
@@ -118,5 +127,5 @@ export const useArticlesStore = defineStore('articles', () => {
     if (idx > 0) select(articles.value[idx - 1])
   }
 
-  return { articles, total, selected, loading, load, select, markRead, prependArticle, search, loadFavorites, loadReadLater, toggleFavorite, toggleReadLater, selectNext, selectPrev }
+  return { articles, total, selected, loading, filter, load, select, clearSelection, markRead, prependArticle, search, loadFavorites, loadReadLater, toggleFavorite, toggleReadLater, selectNext, selectPrev }
 })

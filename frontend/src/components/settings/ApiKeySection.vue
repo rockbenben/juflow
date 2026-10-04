@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import api from '../../api/client'
+import { useI18n } from 'vue-i18n'
 
+const { t } = useI18n()
 const apiKey = ref<string | null>(null)
 const hasFullKey = ref(false)
 const loading = ref(false)
@@ -45,7 +47,7 @@ async function copyKey() {
 }
 
 async function regenerate() {
-  if (!confirm('确定重新生成 API Key？旧 Key 将立即失效。')) return
+  if (!confirm(t('apiKey.confirmRegenerate'))) return
   regenerating.value = true
   try {
     const { data } = await api.post('/settings/api-key/regenerate')
@@ -75,14 +77,14 @@ async function createKey() {
 <template>
   <div class="api-key-section">
     <div class="card">
-      <h3>API Key</h3>
-      <p class="description">使用 API Key 可以通过 HTTP 接口访问你的 JuFlow 数据。</p>
+      <h3>{{ t('apiKey.title') }}</h3>
+      <p class="description">{{ t('apiKey.desc') }}</p>
 
-      <div v-if="loading" class="loading-text">加载中...</div>
+      <div v-if="loading" class="loading-text" role="status">{{ t('apiKey.loading') }}</div>
 
       <div v-else-if="!apiKey" class="no-key">
-        <p class="hint">你还没有 API Key</p>
-        <button class="create-btn" @click="createKey">生成 API Key</button>
+        <p class="hint">{{ t('apiKey.noKey') }}</p>
+        <button class="create-btn" @click="createKey">{{ t('apiKey.create') }}</button>
       </div>
 
       <div v-else class="key-display">
@@ -93,24 +95,24 @@ async function createKey() {
             @click="copyKey"
             :class="{ copied }"
             :disabled="!hasFullKey"
-            :title="hasFullKey ? '' : '完整 Key 仅在生成时可复制'"
+            :title="hasFullKey ? '' : t('apiKey.copyFullOnly')"
           >
-            {{ copied ? '已复制 ✓' : '复制' }}
+            {{ copied ? t('apiKey.copied') : t('apiKey.copy') }}
           </button>
         </div>
         <div class="key-actions">
           <button class="regen-btn" @click="regenerate" :disabled="regenerating">
-            {{ regenerating ? '生成中...' : '重新生成' }}
+            {{ regenerating ? t('apiKey.regenerating') : t('apiKey.regenerate') }}
           </button>
         </div>
-        <p class="warning">完整 Key 只在生成时可见，请妥善保存。</p>
+        <p class="warning">{{ t('apiKey.warning') }}</p>
       </div>
     </div>
 
     <div class="card">
-      <h3>使用方法</h3>
+      <h3>{{ t('apiKey.usage') }}</h3>
       <pre class="code-example">X-API-Key: &lt;your-api-key&gt;</pre>
-      <p class="description">在 HTTP 请求头中携带 X-API-Key。API 文档见 <code>/docs</code>。</p>
+      <p class="description">{{ t('apiKey.usageDesc', { docs: '/docs' }) }}</p>
     </div>
   </div>
 </template>
@@ -123,9 +125,10 @@ h3 { color: var(--text-primary); font-size: 14px; margin: 0 0 8px; }
 .loading-text { color: var(--text-secondary); font-size: 13px; }
 .no-key .hint { color: var(--text-secondary); font-size: 13px; margin: 0 0 12px; }
 .create-btn {
-  padding: 8px 20px; background: var(--accent); color: #fff; border: none;
-  border-radius: 6px; cursor: pointer; font-size: 13px;
+  padding: 8px 20px; background: var(--accent-strong); color: #fff; border: none;
+  border-radius: 6px; cursor: pointer; font-size: 13px; font-family: inherit;
 }
+.create-btn:hover { background: var(--accent-strong-hover); }
 .key-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
 .key-code {
   flex: 1; padding: 8px 12px; background: var(--bg-tertiary); border: 1px solid var(--border);
@@ -134,15 +137,16 @@ h3 { color: var(--text-primary); font-size: 14px; margin: 0 0 8px; }
 }
 .copy-btn {
   padding: 6px 14px; background: var(--bg-tertiary); border: 1px solid var(--border);
-  border-radius: 6px; color: var(--text-secondary); cursor: pointer; font-size: 12px;
+  border-radius: 6px; color: var(--text-secondary); cursor: pointer; font-size: 12px; font-family: inherit;
   white-space: nowrap; transition: all 0.2s;
 }
 .copy-btn.copied { border-color: var(--success); color: var(--success); }
-.copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+.copy-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent-text); }
+.copy-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 .key-actions { margin-bottom: 10px; }
 .regen-btn {
   padding: 6px 14px; background: transparent; color: var(--error); border: 1px solid var(--error);
-  border-radius: 6px; cursor: pointer; font-size: 12px; transition: opacity 0.2s;
+  border-radius: 6px; cursor: pointer; font-size: 12px; font-family: inherit; transition: opacity 0.2s;
 }
 .regen-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 .warning { color: var(--text-muted); font-size: 12px; margin: 0; }

@@ -18,11 +18,11 @@ const shortcuts = [
 </script>
 
 <template>
-  <div class="help-overlay" @click.self="$emit('close')">
+  <div class="help-overlay" role="dialog" aria-modal="true" :aria-label="t('keyboard.title')" @click.self="$emit('close')">
     <div class="help-panel">
       <div class="help-header">
         <h2>{{ t('keyboard.title') }}</h2>
-        <button class="close-btn" @click="$emit('close')">✕</button>
+        <button class="close-btn" :aria-label="t('keyboard.close')" @click="$emit('close')">✕</button>
       </div>
       <div class="shortcuts-grid">
         <template v-for="s in shortcuts" :key="s.key">
