@@ -86,7 +86,7 @@ docker compose up -d
 
 | 服务          | 端口 | 说明                                                              |
 | ------------- | ---- | ----------------------------------------------------------------- |
-| frontend      | 80   | Nginx 托管前端，反向代理 `/api`、`/ws`、`/docs`、`/health` 到后端 |
+| frontend      | 80   | Nginx 托管前端，反向代理 `/api`、`/ws`、`/docs`、`/openapi.json`、`/health` 到后端 |
 | backend       | 8000 | FastAPI API + WebSocket（启动时自动执行数据库迁移）               |
 | celery-worker | —    | 抓取 + 通知任务执行                                               |
 | celery-beat   | —    | 定时调度                                                          |
@@ -171,7 +171,7 @@ celery -A app.tasks.celery_app beat --loglevel=info
 
 # 前端（vite.config.ts 已配置 proxy，自动转发 /api /ws 到 localhost:8000）
 cd frontend
-npm install --legacy-peer-deps
+npm install
 npm run dev
 ```
 

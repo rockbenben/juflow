@@ -76,7 +76,7 @@ juflow/
 │   │   ├── models/         # SQLAlchemy 模型
 │   │   ├── schemas/        # Pydantic 验证模型
 │   │   ├── services/       # 业务逻辑 + 通知渠道
-│   │   ├── tasks/          # Celery 异步任务（共享数据库连接池）
+│   │   ├── tasks/          # Celery 异步任务（worker 进程内共享独立连接池 app/tasks/db）
 │   │   ├── config.py       # 配置
 │   │   ├── database.py     # 数据库连接
 │   │   └── main.py         # FastAPI 入口
@@ -88,7 +88,7 @@ juflow/
 ├── frontend/
 │   ├── src/
 │   │   ├── components/     # Vue 组件（含新用户引导、设置面板）
-│   │   ├── composables/    # 组合式函数（主题/快捷键/WebSocket/Toast）
+│   │   ├── composables/    # 组合式函数（主题/快捷键/WebSocket+Toast/平台色与抓取间隔）
 │   │   ├── i18n/           # 国际化（zh-CN / en）
 │   │   ├── stores/         # Pinia 状态管理
 │   │   └── views/          # 页面视图

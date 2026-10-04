@@ -86,7 +86,7 @@ docker compose up -d
 
 | Service       | Port | What it does                                                              |
 | ------------- | ---- | ------------------------------------------------------------------------- |
-| frontend      | 80   | Nginx serving the SPA; reverse-proxies `/api`, `/ws`, `/docs`, `/health`  |
+| frontend      | 80   | Nginx serving the SPA; reverse-proxies `/api`, `/ws`, `/docs`, `/openapi.json`, `/health`  |
 | backend       | 8000 | FastAPI API + WebSocket (runs DB migrations on startup)                    |
 | celery-worker | —    | Fetch and notification jobs                                               |
 | celery-beat   | —    | Scheduler                                                                 |
@@ -171,7 +171,7 @@ celery -A app.tasks.celery_app beat --loglevel=info
 
 # Frontend (vite.config.ts already proxies /api and /ws to localhost:8000)
 cd frontend
-npm install --legacy-peer-deps
+npm install
 npm run dev
 ```
 

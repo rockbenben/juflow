@@ -1,5 +1,6 @@
--- Full-text search support
--- If pg_jieba is available, use jiebacfg; otherwise fall back to simple config
+-- Provision pg_jieba for future Chinese full-text search.
+-- The current search path is ILIKE on title (see article_service); nothing
+-- consumes jiebacfg yet. If the extension is unavailable we just skip it.
 DO $$
 BEGIN
     BEGIN
