@@ -28,6 +28,7 @@ settings = Settings()
 
 if settings.secret_key == _INSECURE_DEFAULT:
     warnings.warn(
-        "SECRET_KEY is using the insecure default. Set SECRET_KEY in .env before deploying to production.",
+        "SECRET_KEY is using the insecure default — run ./setup.sh (repo root) or set "
+        "SECRET_KEY in .env before deploying; tokens fall back to an insecure default.",
         stacklevel=1,
     )

@@ -68,12 +68,23 @@ RSS readers like Folo have thin support for bloggers on Chinese platforms. Many 
 git clone https://github.com/rockbenben/juflow.git
 cd juflow
 
-# 2. Configure
-cp .env.example .env
-# Edit .env — you MUST change:
-#   - SECRET_KEY       (any random string; startup warns if left at the default)
-#   - POSTGRES_PASSWORD (use a strong one)
+# 2. Generate config — pick one path
+# Path A (Linux / macOS / Git Bash on Windows): fills random secrets and
+# syncs the password inside DATABASE_URL; existing .env values are never
+# overwritten, only placeholders are replaced
+./setup.sh
+```
 
+> **Path B (any platform, incl. PowerShell / cmd)** — no script needed:
+> 1. copy `.env.example` to `.env`;
+> 2. change three values, keeping the password consistent: `SECRET_KEY` (any long
+>    random string), `POSTGRES_PASSWORD` (strong), and the password embedded in
+>    `DATABASE_URL` (`postgresql+asyncpg://juflow:<same password>@postgres:5432/juflow`).
+>
+> The DB password only takes effect when the pgdata volume is **first initialized**;
+> if you ran the stack before, either `ALTER ROLE` in the existing DB or wipe pgdata.
+
+```bash
 # 3. Start everything (health checks wait for dependencies; migrations run automatically)
 docker compose up -d
 
@@ -81,6 +92,21 @@ docker compose up -d
 # http://localhost
 # After registering you'll get the recommended-sources page — subscribe in one click and you're reading.
 ```
+
+> Optional — to enable browser system notifications (Web Push), generate a VAPID key pair and paste it into `.env` (everything else works without it):
+>
+> ```bash
+> docker compose run --rm backend python -c "
+> from cryptography.hazmat.primitives.asymmetric import ec
+> from cryptography.hazmat.primitives import serialization
+> import base64
+> k = ec.generate_private_key(ec.SECP256R1())
+> pub = k.public_key().public_bytes(serialization.Encoding.X962, serialization.PublicFormat.UncompressedPoint)
+> b = lambda x: base64.urlsafe_b64encode(x).rstrip(b'=').decode()
+> print('VAPID_PUBLIC_KEY=' + b(pub)); print('VAPID_PRIVATE_KEY=' + b(k.private_numbers().private_value.to_bytes(32, 'big')))"
+> ```
+>
+> Paste the two lines into `.env`, then `docker compose up -d` to restart the backend.
 
 ### Services
 

@@ -50,7 +50,7 @@ async def _notify(article_id: str, source_id: str):
             )).scalars().all()
             user_settings["push_subscriptions"] = [{"endpoint": p.endpoint, "p256dh": p.p256dh, "auth": p.auth} for p in push_subs]
 
-            channels = sub.notify_channels or user_settings.get("notify_defaults", ["web"])
+            channels = sub.notify_channels or user_settings.get("notify_defaults", ["web_push"])
 
             if _in_dnd(user_settings) and not sub.dnd_exempt:
                 r.rpush(f"juflow:dnd_pending:{user.id}", json.dumps({"article_id": article_id, "source_id": source_id, "channels": channels}, default=str))

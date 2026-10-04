@@ -68,12 +68,20 @@ Folo 等 RSS 阅读器对国内个人博主支持不足。很多平台没有 RSS
 git clone https://github.com/rockbenben/juflow.git
 cd juflow
 
-# 2. 配置环境变量
-cp .env.example .env
-# 编辑 .env，必须修改：
-#   - SECRET_KEY（改为随机字符串，否则启动时会警告）
-#   - POSTGRES_PASSWORD（改为强密码）
+# 2. 生成配置 —— 二选一
+# 方式 A（Linux / macOS / Windows Git Bash）：一条命令自动填充随机密钥与数据库密码，
+#    并同步 DATABASE_URL；已有 .env 只补缺、不覆盖你改过的值
+./setup.sh
+```
 
+> **方式 B（任何平台，含 PowerShell / cmd）**：不用脚本，手动两步——
+> 1. 复制 `.env.example` 为 `.env`；
+> 2. 改三处并保持口令一致：`SECRET_KEY`（任意随机长串）、`POSTGRES_PASSWORD`（强密码）、
+>    `DATABASE_URL` 中内嵌的口令（`postgresql+asyncpg://juflow:<这里改成同一个密码>@postgres:5432/juflow`）。
+>
+> 注意：数据库口令只在 pgdata 卷**首次初始化**时生效；若之前已启动过，改口令需同步库内（`ALTER ROLE`）或清卷重建。
+
+```bash
 # 3. 启动所有服务（带健康检查，自动等待依赖就绪，数据库迁移自动执行）
 docker compose up -d
 
@@ -81,6 +89,21 @@ docker compose up -d
 # 打开 http://localhost
 # 注册后会看到推荐订阅源引导页，一键订阅即可开始
 ```
+
+> 想启用浏览器系统通知（Web Push），需再生成一对 VAPID 密钥并写入 `.env`（可选，不配也能用站内红点与邮件/微信/Telegram 通知）：
+>
+> ```bash
+> docker compose run --rm backend python -c "
+> from cryptography.hazmat.primitives.asymmetric import ec
+> from cryptography.hazmat.primitives import serialization
+> import base64
+> k = ec.generate_private_key(ec.SECP256R1())
+> pub = k.public_key().public_bytes(serialization.Encoding.X962, serialization.PublicFormat.UncompressedPoint)
+> b = lambda x: base64.urlsafe_b64encode(x).rstrip(b'=').decode()
+> print('VAPID_PUBLIC_KEY=' + b(pub)); print('VAPID_PRIVATE_KEY=' + b(k.private_numbers().private_value.to_bytes(32, 'big')))"
+> ```
+>
+> 把输出的两行粘贴进 `.env` 后 `docker compose up -d` 重启后端即可。
 
 ### 服务说明
 

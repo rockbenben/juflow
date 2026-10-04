@@ -100,6 +100,7 @@ juflow/
 ├── .github/workflows/      # CI（pytest + 前端构建）
 ├── docker-compose.yml      # 生产配置（无暴露 DB 端口）
 ├── docker-compose.override.yml  # 开发端口暴露（compose 自动加载）
+├── setup.sh              # 部署引导：生成 .env 并填充随机密钥（POSIX shell）
 ├── .env.example
 ├── .gitattributes          # 强制 shell/Dockerfile LF 换行
 └── README.md

@@ -16,7 +16,7 @@ class Subscription(Base):
     source_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("sources.id", ondelete="CASCADE"))
     fetch_interval: Mapped[int] = mapped_column(Integer, default=300)
     notify_enabled: Mapped[bool] = mapped_column(Boolean, default=True)
-    notify_channels: Mapped[list] = mapped_column(JSONB, default=lambda: ["web"])
+    notify_channels: Mapped[list] = mapped_column(JSONB, default=lambda: ["web_push"])
     custom_name: Mapped[str | None] = mapped_column(String(255))
     dnd_exempt: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

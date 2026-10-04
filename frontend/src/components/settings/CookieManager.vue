@@ -18,6 +18,7 @@ const { t } = useI18n()
 const cookies = ref<Record<string, CookieEntry>>({})
 const saving = ref<Record<string, boolean>>({})
 const messages = ref<Record<string, string>>({})
+const howtoOpen = ref<Record<string, boolean>>({})
 
 onMounted(async () => {
   PLATFORMS.forEach(p => {
@@ -78,9 +79,21 @@ async function deleteCookie(platform: string) {
     <div v-for="p in PLATFORMS" :key="p" class="cookie-card">
       <div class="card-header">
         <span class="platform-name">{{ t(`cookie.platforms.${p}`) }}</span>
-        <span class="status-badge" :class="cookies[p]?.status">
-          {{ cookies[p]?.status === 'valid' ? `✅ ${t('cookie.valid')}` : cookies[p]?.status === 'invalid' ? `❌ ${t('cookie.invalid')}` : `⚪ ${t('cookie.unset')}` }}
+        <span class="header-right">
+          <span class="status-badge" :class="cookies[p]?.status">
+            {{ cookies[p]?.status === 'valid' ? `✅ ${t('cookie.valid')}` : cookies[p]?.status === 'invalid' ? `❌ ${t('cookie.invalid')}` : `⚪ ${t('cookie.unset')}` }}
+          </span>
+          <button type="button" class="howto-btn" :aria-expanded="!!howtoOpen[p]" @click="howtoOpen[p] = !howtoOpen[p]">
+            {{ howtoOpen[p] ? t('cookie.howtoHide') : t('cookie.howto') }} <span class="chev">{{ howtoOpen[p] ? '▴' : '▾' }}</span>
+          </button>
         </span>
+      </div>
+      <div v-if="howtoOpen[p]" class="howto" role="note">
+        <p>{{ t('cookie.step1', { label: t(`cookie.platforms.${p}`) }) }}</p>
+        <p>{{ t('cookie.step2') }}</p>
+        <p>{{ t('cookie.step3', { label: t(`cookie.platforms.${p}`) }) }}</p>
+        <p>{{ t('cookie.step4') }}</p>
+        <p class="howto-note">{{ t('cookie.howtoNote') }}</p>
       </div>
       <textarea
         v-model="cookies[p].cookie_string"
@@ -106,8 +119,16 @@ async function deleteCookie(platform: string) {
 .cookie-manager { display: flex; flex-direction: column; gap: 16px; }
 .description { color: var(--text-secondary); font-size: 13px; margin: 0 0 4px; }
 .cookie-card { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; padding: 16px; }
-.card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; gap: 12px; }
 .platform-name { color: var(--text-primary); font-size: 14px; font-weight: 600; }
+.header-right { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.howto-btn { background: none; border: none; padding: 0; color: var(--accent-text); font-size: 12px; font-family: inherit; cursor: pointer; white-space: nowrap; }
+.howto-btn:hover { text-decoration: underline; }
+.chev { font-size: 10px; }
+.howto { background: var(--bg-tertiary); border: 1px dashed var(--border); border-radius: 6px; padding: 10px 14px; margin-bottom: 12px; }
+.howto p { color: var(--text-secondary); font-size: 12.5px; margin: 0 0 6px; line-height: 1.7; }
+.howto p:last-child { margin-bottom: 0; }
+.howto-note { color: var(--text-muted) !important; }
 .status-badge { font-size: 12px; color: var(--text-secondary); }
 .status-badge.valid { color: var(--success); }
 .status-badge.invalid { color: var(--error); }

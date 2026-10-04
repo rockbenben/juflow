@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import api from '../../api/client'
 import { useI18n } from 'vue-i18n'
 
@@ -33,6 +33,89 @@ const saving = ref(false)
 const saveMessage = ref('')
 const saveFailed = ref(false)
 
+const serverStatus = ref<{ web_push_ready: boolean; smtp_ready: boolean } | null>(null)
+const pushPerm = ref<NotificationPermission>(typeof Notification !== 'undefined' ? Notification.permission : 'denied')
+const pushSubscribed = ref(false)
+const enabling = ref(false)
+const enableError = ref('')
+
+const browserChip = computed(() => {
+  if (!serverStatus.value) return { text: '…', cls: 'chip' }
+  if (!serverStatus.value.web_push_ready) return { text: t('notif.serverVapid'), cls: 'chip miss' }
+  if (pushSubscribed.value) return { text: t('notif.ready'), cls: 'chip ok' }
+  if (pushPerm.value === 'denied') return { text: t('notif.browserBlocked'), cls: 'chip miss' }
+  return { text: t('notif.browserNotEnabled'), cls: 'chip miss' }
+})
+const showEnable = computed(() =>
+  !!serverStatus.value?.web_push_ready && !pushSubscribed.value && pushPerm.value !== 'denied')
+const emailChip = computed(() => {
+  if (!serverStatus.value) return { text: '…', cls: 'chip' }
+  if (!serverStatus.value.smtp_ready) return { text: t('notif.serverSmtp'), cls: 'chip miss' }
+  if (!settings.value.email_address) return { text: t('notif.noAddress'), cls: 'chip miss', target: 'card-email' }
+  return { text: t('notif.ready'), cls: 'chip ok' }
+})
+const wechatChip = computed(() => settings.value.wechat_webhook
+  ? { text: t('notif.ready'), cls: 'chip ok' }
+  : { text: t('notif.notConfigured'), cls: 'chip miss', target: 'card-wechat' })
+const telegramChip = computed(() => (settings.value.telegram_bot_token && settings.value.telegram_chat_id)
+  ? { text: t('notif.ready'), cls: 'chip ok' }
+  : { text: t('notif.notConfigured'), cls: 'chip miss', target: 'card-telegram' })
+
+function jumpTo(chip: { target?: string }) {
+  if (!chip.target) return
+  const el = document.getElementById(chip.target)
+  el?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  el?.querySelector<HTMLInputElement>('input')?.focus({ preventScroll: true })
+}
+
+async function refreshPushState() {
+  if (!('serviceWorker' in navigator)) return
+  const reg = await navigator.serviceWorker.getRegistration()
+  if (!reg) { pushSubscribed.value = false; return }
+  pushSubscribed.value = !!(await reg.pushManager.getSubscription())
+}
+
+function urlBase64ToUint8Array(input: string): Uint8Array {
+  const padding = '='.repeat((4 - (input.length % 4)) % 4)
+  const raw = atob((input + padding).replace(/-/g, '+').replace(/_/g, '/'))
+  return Uint8Array.from([...raw].map(c => c.charCodeAt(0)))
+}
+
+async function enableBrowserNotifications() {
+  enabling.value = true
+  enableError.value = ''
+  try {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window) || pushPerm.value === 'denied') {
+      enableError.value = t('notif.browserBlocked')
+      return
+    }
+    if (pushPerm.value === 'default') {
+      pushPerm.value = await Notification.requestPermission()
+      if (pushPerm.value !== 'granted') { enableError.value = t('notif.browserBlocked'); return }
+    }
+    const reg = (await navigator.serviceWorker.getRegistration())
+      ?? (await navigator.serviceWorker.register('/sw.js'))
+    if (!reg?.pushManager) { enableError.value = t('notif.enableFailed'); return }
+    const { data } = await api.get('/notifications/push/vapid-key')
+    const sub = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(data.public_key) as BufferSource,
+    })
+    const json = sub.toJSON()
+    if (!json.keys?.p256dh || !json.keys?.auth) throw new Error('missing subscription keys')
+    await api.post('/notifications/push/subscribe', {
+      endpoint: sub.endpoint,
+      p256dh: json.keys.p256dh,
+      auth: json.keys.auth,
+    })
+    pushSubscribed.value = true
+  } catch {
+    enableError.value = t('notif.enableFailed')
+  } finally {
+    enabling.value = false
+  }
+}
+
 const channels = ['web_push', 'wechat', 'telegram', 'email'] as const
 
 function toggleChannel(key: string) {
@@ -45,6 +128,8 @@ function toggleChannel(key: string) {
 }
 
 onMounted(async () => {
+  api.get('/notifications/channels-status').then(({ data }) => { serverStatus.value = data }).catch(() => {})
+  refreshPushState().catch(() => {})
   try {
     const { data } = await api.get('/notifications/settings')
     Object.assign(settings.value, data)
@@ -72,6 +157,19 @@ async function save() {
 
 <template>
   <div class="notification-settings">
+    <div class="status-bar" role="status">
+      <span class="st-title">{{ t('notif.statusBar') }}</span>
+      <span class="chip ok">{{ t('notif.inApp') }}</span>
+      <span :class="browserChip.cls">{{ t('notif.browser') }} · {{ browserChip.text }}</span>
+      <button v-if="showEnable" class="enable-btn" :disabled="enabling" @click="enableBrowserNotifications">
+        {{ enabling ? t('notif.enabling') : t('notif.enableBrowser') }}
+      </button>
+      <span class="chip" :class="wechatChip.cls" :role="wechatChip.target ? 'button' : undefined" tabindex="0" @click="jumpTo(wechatChip)" @keydown.enter="jumpTo(wechatChip)">{{ t('channels.wechat') }} · {{ wechatChip.text }}</span>
+      <span class="chip" :class="telegramChip.cls" :role="telegramChip.target ? 'button' : undefined" tabindex="0" @click="jumpTo(telegramChip)" @keydown.enter="jumpTo(telegramChip)">{{ t('channels.telegram') }} · {{ telegramChip.text }}</span>
+      <span class="chip" :class="emailChip.cls" :role="emailChip.target ? 'button' : undefined" tabindex="0" @click="jumpTo(emailChip)" @keydown.enter="jumpTo(emailChip)">{{ t('channels.email') }} · {{ emailChip.text }}</span>
+    </div>
+    <p v-if="enableError" class="enable-error" role="alert">{{ enableError }}</p>
+
     <div class="card">
       <h3>{{ t('notif.channels') }}</h3>
       <div class="checkbox-group">
@@ -108,7 +206,7 @@ async function save() {
       </div>
     </div>
 
-    <div class="card">
+    <div class="card" id="card-email">
       <h3>{{ t('notif.emailDigest') }}</h3>
       <div class="field">
         <label class="label-text" for="digest-mode">{{ t('notif.digestMode') }}</label>
@@ -124,7 +222,7 @@ async function save() {
       </div>
     </div>
 
-    <div class="card">
+    <div class="card" id="card-wechat">
       <h3>{{ t('notif.wechat') }}</h3>
       <div class="field">
         <label class="label-text" for="wechat-webhook">{{ t('notif.wechatWebhook') }}</label>
@@ -132,7 +230,7 @@ async function save() {
       </div>
     </div>
 
-    <div class="card">
+    <div class="card" id="card-telegram">
       <h3>{{ t('notif.telegram') }}</h3>
       <div class="field">
         <label class="label-text" for="tg-token">{{ t('notif.botToken') }}</label>
@@ -155,6 +253,16 @@ async function save() {
 
 <style scoped>
 .notification-settings { display: flex; flex-direction: column; gap: 16px; }
+.status-bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; font-size: 12.5px; }
+.st-title { font-weight: 600; color: var(--text-primary); margin-right: 6px; }
+.chip { padding: 3px 10px; border-radius: 12px; border: 1px solid var(--border); color: var(--text-secondary); }
+.chip.ok { color: var(--success); border-color: color-mix(in srgb, var(--success) 50%, transparent); }
+.chip.miss { color: var(--warning); border-color: color-mix(in srgb, var(--warning) 50%, transparent); }
+.chip[role="button"] { cursor: pointer; }
+.enable-btn { padding: 5px 14px; background: var(--accent-strong); color: #fff; border: none; border-radius: 6px; font-size: 12.5px; font-family: inherit; cursor: pointer; }
+.enable-btn:hover:not(:disabled) { background: var(--accent-strong-hover); }
+.enable-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.enable-error { color: var(--error); font-size: 12.5px; margin: -8px 0 0; }
 .card { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; padding: 20px; }
 h3 { color: var(--text-primary); font-size: 14px; margin: 0 0 16px; }
 .checkbox-group { display: flex; flex-direction: column; gap: 10px; }

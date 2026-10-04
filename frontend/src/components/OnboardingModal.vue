@@ -109,6 +109,7 @@ const successCount = () => results.value.filter(r => r.ok).length
       <div v-else class="done-screen">
         <h2>{{ t('onboarding.done') }}</h2>
         <p>{{ t('onboarding.doneSummary', { n: successCount() }) }}</p>
+        <p class="done-hint">{{ t('onboarding.doneHint') }}</p>
         <button class="subscribe-btn" @click="emit('close')">{{ t('onboarding.startReading') }}</button>
       </div>
     </div>
@@ -164,4 +165,5 @@ h3 { color: var(--accent-text); font-size: 13px; margin: 0 0 8px; text-transform
 .subscribe-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 .done-screen { text-align: center; padding: 20px 0; }
 .done-screen p { color: var(--text-secondary); font-size: 14px; margin: 8px 0 20px; }
+.done-hint { font-size: 12.5px !important; color: var(--text-muted) !important; border-top: 1px dashed var(--border); padding-top: 12px; margin-top: 0 !important; }
 </style>

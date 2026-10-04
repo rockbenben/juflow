@@ -46,7 +46,7 @@ async def push_subscribe(data: PushSubscribeRequest, user: User = Depends(get_cu
 async def get_notification_settings(user: User = Depends(get_current_user)):
     s = user.settings or {}
     return {
-        "notify_defaults": s.get("notify_defaults", ["web"]),
+        "notify_defaults": s.get("notify_defaults", ["web_push"]),
         "dnd_enabled": s.get("dnd_enabled", False),
         "dnd_start": s.get("dnd_start", "22:00"),
         "dnd_end": s.get("dnd_end", "08:00"),
@@ -66,3 +66,15 @@ async def update_notification_settings(data: NotificationSettingsUpdate, user: U
     user.settings = s
     await db.commit()
     return {"ok": True}
+
+@router.get("/channels-status")
+async def channels_status():
+    # Server-level readiness only, as booleans — never echo key/host values.
+    # Template placeholders from .env.example count as "not configured":
+    # a fresh deploy must not see the email chip claim ready.
+    from app.config import settings
+    smtp_ready = bool(settings.smtp_host) and settings.smtp_host not in ("localhost", "smtp.example.com")
+    return {
+        "web_push_ready": bool(settings.vapid_public_key and settings.vapid_private_key),
+        "smtp_ready": smtp_ready,
+    }
