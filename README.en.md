@@ -8,6 +8,8 @@
 
 **▶ Self-host it**: `git clone` → `docker compose up -d` → open `http://localhost` ([full steps](#quick-start))
 
+![JuFlow's three-pane interface: subscriptions on the left, article list in the middle, full-text reader on the right](.github/assets/readme-ui.png)
+
 Follow bloggers across 14 Chinese platforms — Xueqiu, Jisilu, Taoguba, WeChat Official Accounts, Zhihu, Weibo, Xiaohongshu and more — and get their new posts pushed to you in real time, in one place.
 
 ## Why this exists

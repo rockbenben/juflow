@@ -1,0 +1,67 @@
+<!doctype html>
+<!-- GitHub social preview card source (1280x640, GitHub's recommended size).
+     Regenerate after editing:
+       node <html-shot-skill>/render.mjs .github/assets/social-card.html .github/assets/juflow-social.png
+     The base screenshot social-card-ui.png comes from the design-preview fixture
+     (working-state feed view; see design-preview/harness.mjs when present locally). -->
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<style>
+  body {
+    width: 1280px; height: 640px; margin: 0; position: relative; overflow: hidden;
+    background: #0d0d14; color: #dfe6e9;
+    font-family: -apple-system, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    display: flex; align-items: center; gap: 44px; padding: 0 56px; box-sizing: border-box;
+  }
+  .glow { position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(600px 400px at 8% 0%, rgba(108,99,255,.22), transparent 70%),
+                radial-gradient(560px 440px at 96% 100%, rgba(108,99,255,.10), transparent 70%); }
+  .left { position: relative; flex: 1; min-width: 0; }
+  .brand { font-size: 92px; font-weight: 800; line-height: 1.05; color: #8d87ff; letter-spacing: 2px; }
+  .latin { font-size: 42px; color: #9198a1; margin: 2px 0 24px; font-weight: 600; }
+  .tagline { font-size: 36px; line-height: 1.5; color: #dfe6e9; font-weight: 600; }
+  .sub { font-size: 36px; line-height: 1.5; color: #9198a1; margin-bottom: 26px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 10px; }
+  .chip { font-size: 28px; line-height: 1; padding: 10px 18px; border: 2px solid #2a2a3a; border-radius: 999px; color: #dfe6e9; }
+  .chip b { color: #8d87ff; font-weight: 700; }
+  .foot { position: absolute; left: 56px; bottom: 34px; font-size: 26px; color: #9198a1; letter-spacing: .5px; }
+  .right { position: relative; width: 680px; flex-shrink: 0; }
+  .win { border: 2px solid #2a2a3a; border-radius: 14px; overflow: hidden; background: #12121a;
+         box-shadow: 0 24px 60px rgba(0,0,0,.55); }
+  .bar { height: 40px; display: flex; align-items: center; gap: 8px; padding: 0 14px; background: #1a1a2e; border-bottom: 1px solid #2a2a3a; }
+  .dot { width: 12px; height: 12px; border-radius: 50%; }
+  .addr { margin-left: 10px; font-size: 18px; color: #9198a1; background: #12121a; border: 1px solid #2a2a3a; border-radius: 6px; padding: 4px 12px; }
+  .win img { display: block; width: 676px; height: 425px; object-fit: cover; object-position: left top; }
+</style>
+</head>
+<body>
+  <div class="glow"></div>
+  <div class="left">
+    <div class="brand">聚流</div>
+    <div class="latin">JuFlow</div>
+    <div class="tagline">国内博主聚合阅读器</div>
+    <div class="sub">14 个平台，一个收件箱</div>
+    <div class="chips">
+      <span class="chip"><b>雪球</b></span>
+      <span class="chip"><b>知乎</b></span>
+      <span class="chip"><b>微博</b></span>
+      <span class="chip"><b>公众号</b></span>
+      <span class="chip"><b>CSDN</b></span>
+      <span class="chip"><b>…</b></span>
+    </div>
+  </div>
+  <div class="right">
+    <div class="win">
+      <div class="bar">
+        <span class="dot" style="background:#e17055"></span>
+        <span class="dot" style="background:#fdcb6e"></span>
+        <span class="dot" style="background:#00b894"></span>
+        <span class="addr">localhost</span>
+      </div>
+      <img src="social-card-ui.png" alt="JuFlow interface" />
+    </div>
+  </div>
+  <div class="foot">Docker 一键自托管 · MIT · 365 开源计划 #007</div>
+</body>
+</html>
