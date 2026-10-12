@@ -82,6 +82,19 @@ h1 { color: var(--text-primary); font-size: 22px; line-height: 1.4; margin: 0 0 
 .body :deep(p) { margin: 0 0 16px; }
 .body :deep(a) { color: var(--accent-text); }
 .body :deep(img) { max-width: 100%; height: auto; }
+.body :deep(h2), .body :deep(h3), .body :deep(h4) { color: var(--text-primary); line-height: 1.4; margin: 28px 0 12px; }
+.body :deep(h2) { font-size: 19px; }
+.body :deep(h3) { font-size: 17px; }
+.body :deep(h4) { font-size: 15px; }
+.body :deep(ul), .body :deep(ol) { margin: 0 0 16px; padding-left: 24px; }
+.body :deep(li) { margin-bottom: 6px; }
+.body :deep(blockquote) { margin: 0 0 16px; padding: 2px 0 2px 16px; border-left: 3px solid var(--border); color: var(--text-secondary); }
+.body :deep(pre) { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; margin: 0 0 16px; overflow-x: auto; font-size: 13px; line-height: 1.6; }
+.body :deep(code) { font-family: ui-monospace, SFMono-Regular, Consolas, 'Liberation Mono', monospace; font-size: 0.92em; background: var(--bg-secondary); border-radius: 4px; padding: 1px 5px; }
+.body :deep(pre code) { background: none; padding: 0; font-size: inherit; }
+.body :deep(table) { border-collapse: collapse; width: 100%; margin: 0 0 16px; font-size: 14px; }
+.body :deep(th), .body :deep(td) { border: 1px solid var(--border); padding: 8px 10px; text-align: left; }
+.body :deep(hr) { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
 .hint { color: var(--text-secondary); }
 .hint a { color: var(--accent-text); }
 
