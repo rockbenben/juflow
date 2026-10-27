@@ -1,11 +1,11 @@
-import asyncio, json
+import json
 import redis as redis_lib
 from sqlalchemy import select
 from app.config import settings
 from app.models.user import User
 from app.tasks.celery_app import celery_app
 from app.tasks.notify_task import _in_dnd
-from app.tasks.db import session_factory as _session_factory
+from app.tasks.db import run_task, session_factory as _session_factory
 
 async def _flush_dnd():
     r = redis_lib.Redis.from_url(settings.redis_url)
@@ -25,4 +25,4 @@ async def _flush_dnd():
 
 @celery_app.task(name="app.tasks.dnd_task.flush_dnd_queue")
 def flush_dnd_queue():
-    asyncio.run(_flush_dnd())
+    run_task(_flush_dnd)

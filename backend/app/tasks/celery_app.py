@@ -1,4 +1,3 @@
-import asyncio
 
 from celery import Celery
 from celery.schedules import crontab
@@ -15,7 +14,7 @@ def load_plugins_on_worker_start(**kwargs):
     from sqlalchemy import select
     from app.adapters.plugin_loader import plugin_loader
     from app.models.installed_plugin import InstalledPlugin
-    from app.tasks.db import session_factory
+    from app.tasks.db import run_task, session_factory
 
     async def _load():
         async with session_factory() as db:
@@ -28,7 +27,7 @@ def load_plugins_on_worker_start(**kwargs):
                 print(f"[celery] Loaded {count} plugin(s): {names}")
 
     try:
-        asyncio.run(_load())
+        run_task(_load)
     except Exception as e:
         print(f"[celery] Plugin loading failed (non-fatal): {e}")
 

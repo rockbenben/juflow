@@ -1,4 +1,4 @@
-import asyncio, json, uuid, smtplib
+import json, uuid, smtplib
 from html import escape as html_escape
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -9,7 +9,7 @@ from app.models.user import User
 from app.models.article import Article
 from app.models.source import Source
 from app.tasks.celery_app import celery_app
-from app.tasks.db import session_factory as _session_factory
+from app.tasks.db import run_task, session_factory as _session_factory
 
 _MAX_DIGEST_ITEMS = 50
 
@@ -66,8 +66,8 @@ async def _send_digest(mode: str):
 
 @celery_app.task(name="app.tasks.digest_task.send_hourly_digest")
 def send_hourly_digest():
-    asyncio.run(_send_digest("hourly"))
+    run_task(lambda: _send_digest("hourly"))
 
 @celery_app.task(name="app.tasks.digest_task.send_daily_digest")
 def send_daily_digest():
-    asyncio.run(_send_digest("daily"))
+    run_task(lambda: _send_digest("daily"))

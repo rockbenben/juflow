@@ -1,4 +1,3 @@
-import asyncio
 import json
 from datetime import datetime, timezone
 from sqlalchemy import select
@@ -11,7 +10,7 @@ from app.services.crypto import decrypt
 from app.adapters import registry
 from app.adapters.base import SourceInfo
 from app.tasks.celery_app import celery_app
-from app.tasks.db import session_factory as _session_factory
+from app.tasks.db import run_task, session_factory as _session_factory
 
 # Platform display names for user-facing messages
 _PLATFORM_NAMES = {
@@ -78,4 +77,4 @@ async def _validate_cookies():
 
 @celery_app.task(name="app.tasks.cookie_task.validate_cookies")
 def validate_cookies():
-    asyncio.run(_validate_cookies())
+    run_task(_validate_cookies)

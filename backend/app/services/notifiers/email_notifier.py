@@ -4,6 +4,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from app.config import settings
 from app.services.notifiers.base import BaseNotifier
+from app.services.text_utils import to_plain_text
 
 class EmailNotifier(BaseNotifier):
     channel = "email"
@@ -22,7 +23,7 @@ class EmailNotifier(BaseNotifier):
         html = f"""<div style="font-family:sans-serif;max-width:600px;">
         <h2 style="color:#6c63ff;">{html_escape(article.title)}</h2>
         <p style="color:#888;">{html_escape(source.display_name)} · {html_escape(source.platform)}</p>
-        <p>{html_escape((article.summary or '')[:200])}</p>
+        <p>{html_escape(to_plain_text(article.summary)[:200])}</p>
         <a href="{html_escape(article.url)}" style="color:#6c63ff;">阅读原文 →</a></div>"""
         msg.attach(MIMEText(html, "html"))
 

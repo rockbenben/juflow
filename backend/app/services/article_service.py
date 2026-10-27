@@ -12,6 +12,7 @@ from app.models.article import Article
 from app.models.source import Source
 from app.models.subscription import Subscription
 from app.models.user_article import UserArticle
+from app.services.text_utils import split_article_text
 
 
 def make_fingerprint(url: str, title: str) -> str:
@@ -26,13 +27,16 @@ async def store_articles(db: AsyncSession, source_id: uuid.UUID, items: list[Art
         existing = await db.execute(select(Article).where(Article.fingerprint == fp))
         if existing.scalar_one_or_none():
             continue
+        # Feeds put the article HTML in `summary`; keep the fields on their
+        # documented contract (summary = text, content = HTML body).
+        summary_text, content_html = split_article_text(item.summary, item.content)
         article = Article(
             source_id=source_id,
             # Truncate to the column limits (title=1000, url/cover_image=2000) so a
             # single oversized feed entry can't raise DataError and abort the batch.
             title=item.title[:1000],
-            summary=item.summary,
-            content=item.content,
+            summary=summary_text,
+            content=content_html,
             url=item.url[:2000],
             cover_image=item.cover_image[:2000] if item.cover_image else item.cover_image,
             published_at=item.published_at or datetime.now(timezone.utc),
@@ -118,11 +122,15 @@ async def get_user_articles(
     enriched = []
     for article in articles:
         ua = ua_map.get(article.id)
+        # Normalise on read as well as on write: rows stored before the
+        # write-path fix still carry the feed's HTML in `summary`, and the UI
+        # renders `summary` as plain text.
+        summary_text, content_html = split_article_text(article.summary, article.content)
         data = {
             "id": article.id,
             "title": article.title,
-            "summary": article.summary,
-            "content": article.content,
+            "summary": summary_text,
+            "content": content_html,
             "url": article.url,
             "cover_image": article.cover_image,
             "published_at": article.published_at,

@@ -1,4 +1,3 @@
-import asyncio
 from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import select, func
@@ -6,7 +5,7 @@ from sqlalchemy import select, func
 from app.models.source import Source
 from app.models.subscription import Subscription
 from app.tasks.celery_app import celery_app
-from app.tasks.db import session_factory as _session_factory
+from app.tasks.db import run_task, session_factory as _session_factory
 
 
 async def _schedule_due_sources():
@@ -27,4 +26,4 @@ async def _schedule_due_sources():
 
 @celery_app.task(name="app.tasks.scheduler_task.schedule_due_sources")
 def schedule_due_sources():
-    asyncio.run(_schedule_due_sources())
+    run_task(_schedule_due_sources)

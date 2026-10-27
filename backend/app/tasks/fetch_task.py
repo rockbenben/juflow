@@ -1,4 +1,3 @@
-import asyncio
 import time
 import uuid
 from datetime import datetime, timezone
@@ -12,7 +11,7 @@ from app.models.source import Source
 from app.models.subscription import Subscription
 from app.services.article_service import store_articles
 from app.tasks.celery_app import celery_app
-from app.tasks.db import session_factory as _session_factory
+from app.tasks.db import run_task, session_factory as _session_factory
 
 
 async def _fetch_source(source_id: str):
@@ -95,4 +94,4 @@ async def _fetch_source(source_id: str):
 
 @celery_app.task(name="app.tasks.fetch_task.fetch_source")
 def fetch_source(source_id: str):
-    asyncio.run(_fetch_source(source_id))
+    run_task(_fetch_source)

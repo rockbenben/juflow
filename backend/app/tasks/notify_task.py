@@ -1,4 +1,4 @@
-import asyncio, uuid, json
+import uuid, json
 from datetime import datetime, timezone, timedelta
 from sqlalchemy import select
 from app.config import settings
@@ -8,8 +8,9 @@ from app.models.subscription import Subscription
 from app.models.user import User
 from app.models.push_subscription import PushSubscription
 from app.services.notifiers.dispatcher import dispatcher
+from app.services.text_utils import to_plain_text
 from app.tasks.celery_app import celery_app
-from app.tasks.db import session_factory as _session_factory
+from app.tasks.db import run_task, session_factory as _session_factory
 import redis as redis_lib
 
 # dnd_start/dnd_end come from the UI <input type="time"> as the user's local
@@ -65,7 +66,7 @@ async def _notify(article_id: str, source_id: str):
 
             # WebSocket push always
             msg = {"type": "new_article", "article": {"id": str(article.id), "title": article.title,
-                "summary": (article.summary or "")[:200], "url": article.url,
+                "summary": to_plain_text(article.summary)[:200], "url": article.url,
                 "published_at": str(article.published_at),
                 "source": {"platform": source.platform, "display_name": source.display_name}},
                 "user_ids": [str(user.id)]}
@@ -74,4 +75,4 @@ async def _notify(article_id: str, source_id: str):
 
 @celery_app.task(name="app.tasks.notify_task.notify_new_article")
 def notify_new_article(article_id: str, source_id: str):
-    asyncio.run(_notify(article_id, source_id))
+    run_task(_notify)
