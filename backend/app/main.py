@@ -9,6 +9,7 @@ from fastapi.responses import RedirectResponse
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from sqlalchemy import select
+from starlette.convertors import CONVERTOR_TYPES, StringConvertor
 
 from app.api.auth import router as auth_router
 from app.api.subscriptions import router as subscriptions_router
@@ -58,8 +59,25 @@ app.include_router(onboarding_router, prefix="/api/v1")
 app.include_router(ws_router)
 
 
+class _LegacyApiPath(StringConvertor):
+    """Path converter for the legacy ``/api/<path>`` compatibility redirect.
+
+    It matches everything under ``/api`` *except* the versioned ``/api/v1/...``
+    tree. Without the exclusion the compatibility route below swallows every
+    versioned request (it is matched before the routers registered above it)
+    and re-prefixes the path on every hop: ``/api/v1/admin/health`` →
+    ``/api/v1/v1/admin/health`` → ``/api/v1/v1/v1/admin/health`` → …, an
+    endless redirect loop that no browser or HTTP client can follow.
+    """
+
+    regex = r"(?!(?:v1/|$)).*"
+
+
+CONVERTOR_TYPES["legacy_api"] = _LegacyApiPath()
+
+
 @app.api_route(
-    "/api/{path:path}",
+    "/api/{path:legacy_api}",
     methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
     include_in_schema=False,
 )

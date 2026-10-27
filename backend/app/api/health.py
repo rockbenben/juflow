@@ -9,6 +9,7 @@ router = APIRouter(prefix="/admin/health", tags=["health"])
 
 
 @router.get("/")
+@router.get("")
 async def platform_health_overview(
     user: User = Depends(require_admin),
     db: AsyncSession = Depends(get_db),
