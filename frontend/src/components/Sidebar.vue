@@ -42,6 +42,28 @@ async function loadFavorites() {
 async function loadReadLater() {
   await articles.loadReadLater()
 }
+
+// The groups/tags stores already expose create endpoints, but nothing in the
+// UI could reach them, so the two sections below stayed empty forever.
+async function addGroup() {
+  const name = window.prompt(t('sidebar.newGroupPrompt'))
+  if (!name || !name.trim()) return
+  try {
+    await groups.add(name.trim())
+  } catch {
+    // ignore — the list simply stays as it was
+  }
+}
+
+async function addTag() {
+  const name = window.prompt(t('sidebar.newTagPrompt'))
+  if (!name || !name.trim()) return
+  try {
+    await tags.add(name.trim())
+  } catch {
+    // ignore — the list simply stays as it was
+  }
+}
 </script>
 
 <template>
@@ -52,7 +74,7 @@ async function loadReadLater() {
     </div>
     <nav class="nav" :aria-label="t('settings.title')">
       <button class="nav-item" :class="{ active: activeNav === 'all' }" :aria-pressed="activeNav === 'all'" @click="loadAll">
-        <span class="nav-label">📥 {{ t('sidebar.unread') }}</span>
+        <span class="nav-label">📥 {{ t('sidebar.allArticles') }}</span>
         <span v-if="unreadCount" class="badge">{{ unreadCount }}</span>
       </button>
       <button class="nav-item" :class="{ active: activeNav === 'favorites' }" :aria-pressed="activeNav === 'favorites'" @click="loadFavorites">
@@ -63,9 +85,12 @@ async function loadReadLater() {
       </button>
     </nav>
 
-    <button class="section-label section-collapsible" :aria-expanded="groupsOpen" @click="groupsOpen = !groupsOpen">
-      {{ t('sidebar.groups') }} <span class="chevron">{{ groupsOpen ? '▾' : '▸' }}</span>
-    </button>
+    <div class="section-head">
+      <button class="section-label section-collapsible" :aria-expanded="groupsOpen" @click="groupsOpen = !groupsOpen">
+        {{ t('sidebar.groups') }} <span class="chevron">{{ groupsOpen ? '▾' : '▸' }}</span>
+      </button>
+      <button class="section-add" :aria-label="t('sidebar.newGroup')" :title="t('sidebar.newGroup')" @click="addGroup">＋</button>
+    </div>
     <div v-if="groupsOpen" class="groups-list">
       <div v-if="groups.groups.length === 0" class="empty-hint">{{ t('sidebar.emptyGroups') }}</div>
       <div v-for="group in groups.groups" :key="group.id" class="group-item">
@@ -75,9 +100,12 @@ async function loadReadLater() {
       </div>
     </div>
 
-    <button class="section-label section-collapsible" :aria-expanded="tagsOpen" @click="tagsOpen = !tagsOpen">
-      {{ t('sidebar.tags') }} <span class="chevron">{{ tagsOpen ? '▾' : '▸' }}</span>
-    </button>
+    <div class="section-head">
+      <button class="section-label section-collapsible" :aria-expanded="tagsOpen" @click="tagsOpen = !tagsOpen">
+        {{ t('sidebar.tags') }} <span class="chevron">{{ tagsOpen ? '▾' : '▸' }}</span>
+      </button>
+      <button class="section-add" :aria-label="t('sidebar.newTag')" :title="t('sidebar.newTag')" @click="addTag">＋</button>
+    </div>
     <div v-if="tagsOpen" class="tags-list">
       <div v-if="tags.tags.length === 0" class="empty-hint">{{ t('sidebar.emptyTags') }}</div>
       <span
@@ -132,6 +160,10 @@ async function loadReadLater() {
 .nav-item.active { color: var(--text-primary); background: color-mix(in srgb, var(--accent) 20%, transparent); border-right-color: var(--accent); }
 .badge { background: var(--accent-strong); color: #fff; border-radius: 10px; padding: 1px 8px; font-size: 11px; flex-shrink: 0; }
 .section-label { display: flex; width: 100%; padding: 8px 16px; background: none; border: none; color: var(--text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; text-align: left; font-family: inherit; flex-shrink: 0; }
+.section-head { display: flex; align-items: center; width: 100%; flex-shrink: 0; }
+.section-head .section-label { flex: 1; min-width: 0; }
+.section-add { background: none; border: none; color: var(--text-muted); font-size: 14px; line-height: 1; cursor: pointer; padding: 6px 14px; font-family: inherit; flex-shrink: 0; }
+.section-add:hover { color: var(--accent-text); }
 .section-collapsible { cursor: pointer; justify-content: space-between; align-items: center; user-select: none; }
 .section-collapsible:hover { color: var(--text-secondary); }
 .chevron { font-size: 10px; }

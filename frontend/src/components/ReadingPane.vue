@@ -19,7 +19,7 @@ function formatDate(dateStr: string) {
 </script>
 
 <template>
-  <div class="reading-pane">
+  <div class="reading-pane" :class="{ 'has-article': !!articles.selected }">
     <button v-if="articles.selected" class="back-btn" @click="articles.clearSelection()">← {{ t('articles.backToList') }}</button>
     <div v-if="!articles.selected" class="empty"><p>{{ t('articles.selectToRead') }}</p></div>
     <article v-else class="article-content">
@@ -99,6 +99,10 @@ h1 { color: var(--text-primary); font-size: 22px; line-height: 1.4; margin: 0 0 
 .hint a { color: var(--accent-text); }
 
 @media (max-width: 768px) {
+  /* On a phone the pane is a full-screen overlay (see FeedView). While no
+     article is open it would cover the article list completely and swallow
+     every tap, so it stays hidden until an article is selected. */
+  .reading-pane:not(.has-article) { display: none; }
   .back-btn {
     display: inline-block; position: sticky; top: 0; z-index: 5; margin: 12px 0 0 12px;
     background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 6px;

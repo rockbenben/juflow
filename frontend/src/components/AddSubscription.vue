@@ -3,12 +3,14 @@ import { ref } from 'vue'
 import { useSubscriptionsStore } from '../stores/subscriptions'
 import { useArticlesStore } from '../stores/articles'
 import { INTERVAL_OPTIONS } from '../composables/usePlatform'
+import { useApiError } from '../composables/useApiError'
 import { useI18n } from 'vue-i18n'
 
 const emit = defineEmits<{ (e: 'close'): void }>()
 const subs = useSubscriptionsStore()
 const articles = useArticlesStore()
 const { t } = useI18n()
+const { describe } = useApiError()
 
 const url = ref('')
 const fetchInterval = ref(300)
@@ -27,7 +29,7 @@ async function handleAdd() {
     url.value = ''
     await articles.load()
   } catch (e: any) {
-    error.value = e.response?.data?.detail || t('subscription.addFailed')
+    error.value = describe(e)
   } finally {
     loading.value = false
   }
@@ -43,7 +45,10 @@ async function handleAdd() {
       </div>
       <p class="hint">{{ t('subscription.pasteUrl') }}</p>
       <form @submit.prevent="handleAdd">
-        <input v-model="url" type="url" placeholder="https://xueqiu.com/u/1234567890" :aria-label="t('subscription.pasteUrl')" required autofocus />
+        <!-- type="text", not type="url": WeChat public accounts are subscribed
+             by name (半佛仙人), and native URL validation rejected those
+             silently — the form simply never submitted. -->
+        <input v-model="url" type="text" :placeholder="t('subscription.inputPlaceholder')" :aria-label="t('subscription.pasteUrl')" required autofocus />
         <div class="interval-row">
           <label for="add-interval">{{ t('subscription.interval') }}</label>
           <select id="add-interval" v-model="fetchInterval">

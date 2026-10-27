@@ -14,7 +14,7 @@ const filterTitle = computed(() => {
     case 'favorites': return t('sidebar.favorites')
     case 'read_later': return t('sidebar.readLater')
     case 'search': return t('articles.search').replace('…', '')
-    default: return t('articles.allUnread')
+    default: return t('articles.allArticles')
   }
 })
 

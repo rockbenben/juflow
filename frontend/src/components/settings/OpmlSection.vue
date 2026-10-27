@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import api from '../../api/client'
+import { useApiError } from '../../composables/useApiError'
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
+const { describe } = useApiError()
 const fileInput = ref<HTMLInputElement | null>(null)
 const uploading = ref(false)
 interface SkippedItem { url: string; title: string; reason: string }
@@ -28,7 +30,7 @@ async function handleImport() {
     importResult.value = { imported: data.imported ?? 0, skipped: data.skipped ?? [] }
   } catch (e: unknown) {
     const err = e as { response?: { data?: { detail?: string } } }
-    importError.value = err.response?.data?.detail || t('opml.importFailed')
+    importError.value = describe(err)
   } finally {
     uploading.value = false
     if (fileInput.value) fileInput.value.value = ''

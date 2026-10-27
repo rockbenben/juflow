@@ -40,6 +40,10 @@ function closeOnboarding() {
 }
 
 async function onMobileTab(tab: string) {
+  if (tab === 'add') {
+    showAddModal.value = true
+    return
+  }
   mobileTab.value = tab
   articles.clearSelection()
   if (tab === 'feed') {

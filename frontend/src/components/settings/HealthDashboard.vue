@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import api from '../../api/client'
+import { useApiError } from '../../composables/useApiError'
 import { useI18n } from 'vue-i18n'
 
 interface PlatformHealth {
@@ -13,6 +14,7 @@ interface PlatformHealth {
 }
 
 const { t } = useI18n()
+const { describe } = useApiError()
 const health = ref<PlatformHealth[]>([])
 const loading = ref(false)
 const error = ref('')
@@ -23,7 +25,7 @@ onMounted(async () => {
     const { data } = await api.get('/admin/health')
     health.value = Array.isArray(data) ? data : (data.platforms || [])
   } catch (e: any) {
-    error.value = e.response?.data?.detail || t('health.loadFailed')
+    error.value = describe(e)
   } finally {
     loading.value = false
   }

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import api from '../../api/client'
+import { useApiError } from '../../composables/useApiError'
 import { useI18n } from 'vue-i18n'
 
 interface Plugin {
@@ -15,6 +16,7 @@ interface Plugin {
 }
 
 const { t } = useI18n()
+const { describe } = useApiError()
 const plugins = ref<Plugin[]>([])
 const gitUrl = ref('')
 const installing = ref(false)
@@ -45,7 +47,7 @@ async function installFromGit() {
     const { data: all } = await api.get('/plugins/')
     plugins.value = all
   } catch (e: any) {
-    installError.value = e.response?.data?.detail || t('plugin.installFailed')
+    installError.value = describe(e)
   } finally {
     installing.value = false
     setTimeout(() => { installSuccess.value = '' }, 3000)
@@ -68,7 +70,7 @@ async function installFromZip() {
     const { data: all } = await api.get('/plugins/')
     plugins.value = all
   } catch (e: any) {
-    installError.value = e.response?.data?.detail || t('plugin.zipFailed')
+    installError.value = describe(e)
   } finally {
     installing.value = false
     if (fileInput.value) fileInput.value.value = ''

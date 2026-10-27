@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useAuthStore } from '../stores/auth'
+import { useApiError } from '../composables/useApiError'
 import { useI18n } from 'vue-i18n'
 
 const auth = useAuthStore()
 const { t, locale } = useI18n()
+const { describe } = useApiError()
 const email = ref('')
 const username = ref('')
 const password = ref('')
@@ -20,8 +22,7 @@ async function handleRegister() {
   try {
     await auth.register(email.value, username.value, password.value)
   } catch (e: any) {
-    const detail = e.response?.data?.detail
-    error.value = Array.isArray(detail) ? detail.map((d: any) => d.msg).join('; ') : (detail || t('auth.registerFailed'))
+    error.value = describe(e)
   }
 }
 </script>

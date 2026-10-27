@@ -5,6 +5,7 @@ import { useSubscriptionsStore } from '../stores/subscriptions'
 import { useGroupsStore } from '../stores/groups'
 import { useTagsStore } from '../stores/tags'
 import { INTERVAL_OPTIONS } from '../composables/usePlatform'
+import { useApiError } from '../composables/useApiError'
 import { useI18n } from 'vue-i18n'
 
 const props = defineProps<{ subscriptionId: string }>()
@@ -14,6 +15,7 @@ const subs = useSubscriptionsStore()
 const groups = useGroupsStore()
 const tags = useTagsStore()
 const { t } = useI18n()
+const { describe } = useApiError()
 
 const subscription = computed(() => subs.subscriptions.find(s => s.id === props.subscriptionId))
 
@@ -81,8 +83,7 @@ async function save() {
     }
     emit('close')
   } catch (e: unknown) {
-    const err = e as { response?: { data?: { detail?: string } } }
-    error.value = err.response?.data?.detail || t('subscription.saveFailed')
+    error.value = describe(e)
   } finally {
     saving.value = false
   }
