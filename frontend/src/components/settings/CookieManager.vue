@@ -7,6 +7,11 @@ interface CookieEntry {
   platform: string
   cookie_string: string
   status: 'valid' | 'invalid' | 'unknown'
+  // A cookie is stored on the server for this platform. The string itself is
+  // never sent back, so the input stays empty and the "已保存" hint lives in
+  // the placeholder — putting it in the value made a second 保存 click
+  // overwrite the real credential with that placeholder text.
+  saved: boolean
 }
 
 // Only scraper-based platforms actually use the user's cookie (scraper_base sets
@@ -22,7 +27,7 @@ const howtoOpen = ref<Record<string, boolean>>({})
 
 onMounted(async () => {
   PLATFORMS.forEach(p => {
-    cookies.value[p] = { platform: p, cookie_string: '', status: 'unknown' }
+    cookies.value[p] = { platform: p, cookie_string: '', status: 'unknown', saved: false }
     saving.value[p] = false
     messages.value[p] = ''
   })
@@ -31,7 +36,7 @@ onMounted(async () => {
     if (Array.isArray(data)) {
       data.forEach((entry: { platform: string; is_valid: boolean; last_validated_at: string | null }) => {
         if (cookies.value[entry.platform]) {
-          cookies.value[entry.platform].cookie_string = t('cookie.savedLabel')
+          cookies.value[entry.platform].saved = true
           cookies.value[entry.platform].status = entry.is_valid ? 'valid' : 'invalid'
         }
       })
@@ -42,14 +47,20 @@ onMounted(async () => {
 })
 
 async function saveCookie(platform: string) {
+  const value = (cookies.value[platform].cookie_string || '').trim()
+  if (!value) return
   saving.value[platform] = true
   messages.value[platform] = ''
   try {
     await api.post('/cookies/', {
       platform,
-      cookie_string: cookies.value[platform].cookie_string,
+      cookie_string: value,
     })
     cookies.value[platform].status = 'valid'
+    cookies.value[platform].saved = true
+    // Clear the field: the credential now lives on the server, and leaving
+    // the text in the box would invite saving it again.
+    cookies.value[platform].cookie_string = ''
     messages.value[platform] = t('cookie.saved')
   } catch {
     messages.value[platform] = t('cookie.saveFailed')
@@ -63,6 +74,7 @@ async function deleteCookie(platform: string) {
   try {
     await api.delete(`/cookies/${platform}`)
     cookies.value[platform].cookie_string = ''
+    cookies.value[platform].saved = false
     cookies.value[platform].status = 'unknown'
     messages.value[platform] = t('cookie.deleted')
   } catch {
@@ -97,16 +109,18 @@ async function deleteCookie(platform: string) {
       </div>
       <textarea
         v-model="cookies[p].cookie_string"
-        :placeholder="t('cookie.paste', { label: t(`cookie.platforms.${p}`) })"
+        :placeholder="cookies[p]?.saved && !cookies[p]?.cookie_string
+          ? t('cookie.savedLabel')
+          : t('cookie.paste', { label: t(`cookie.platforms.${p}`) })"
         :aria-label="t('cookie.paste', { label: t(`cookie.platforms.${p}`) })"
         class="cookie-input"
         rows="3"
       ></textarea>
       <div class="card-actions">
-        <button class="save-btn" @click="saveCookie(p)" :disabled="saving[p]">
+        <button class="save-btn" @click="saveCookie(p)" :disabled="saving[p] || !cookies[p]?.cookie_string?.trim()">
           {{ saving[p] ? t('cookie.saving') : t('cookie.save') }}
         </button>
-        <button class="delete-btn" @click="deleteCookie(p)" :disabled="!cookies[p]?.cookie_string">
+        <button class="delete-btn" @click="deleteCookie(p)" :disabled="!cookies[p]?.saved && !cookies[p]?.cookie_string?.trim()">
           {{ t('cookie.delete') }}
         </button>
         <span v-if="messages[p]" class="msg" role="status">{{ messages[p] }}</span>
