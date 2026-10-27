@@ -59,6 +59,13 @@ services:
 
   celery-worker:
     image: juflow-backend
+    # The backend image's HEALTHCHECK probes the API on port 8000, which a
+    # Celery worker never listens on — inherited as-is it reports "unhealthy"
+    # forever. The worker has no HTTP endpoint of its own to probe.
+    healthcheck:
+      disable: true
+    # Built locally by the backend service; never pull it from a registry.
+    pull_policy: never
     entrypoint: []
     command: ["celery", "-A", "app.tasks.celery_app", "worker", "--loglevel=info"]
     env_file: .env
@@ -72,6 +79,9 @@ services:
 
   celery-beat:
     image: juflow-backend
+    healthcheck:
+      disable: true
+    pull_policy: never
     entrypoint: []
     command: ["celery", "-A", "app.tasks.celery_app", "beat", "--loglevel=info"]
     env_file: .env
